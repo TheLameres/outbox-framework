@@ -4,7 +4,7 @@
  */
 plugins {
     id("outbox.java-conventions")
-    // Версия НЕ указывается: артефакт плагина уже на classpath build-logic.
+    // Версия НЕ указывается: артефакт плагина уже на classpath buildSrc.
     id("org.springframework.boot")
 }
 

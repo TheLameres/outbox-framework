@@ -1,5 +1,3 @@
-import org.gradle.accessors.dm.LibrariesForLibs
-
 /**
  * Spring Boot BOM + JSpecify для модулей, зависящих от Spring.
  * outbox-core этот плагин НЕ применяет — ядро без Spring.
@@ -7,8 +5,6 @@ import org.gradle.accessors.dm.LibrariesForLibs
 plugins {
     id("outbox.java-conventions")
 }
-
-val libs = the<LibrariesForLibs>()
 
 dependencies {
     // platform() вместо плагина io.spring.dependency-management — Gradle-native

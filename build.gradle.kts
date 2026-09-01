@@ -1,10 +1,11 @@
 /**
- * Корневой build-скрипт после перехода на convention plugins.
+ * Корневой build-скрипт после перехода на convention plugins (buildSrc).
  *
  * Вся конфигурация (toolchain, компилятор, тесты, публикация, BOM, Lombok)
- * переехала в build-logic/src/main/kotlin/outbox.*.gradle.kts.
- * Ни subprojects{}, ни allprojects{}, ни обращений к libs.* здесь больше нет —
- * каждый модуль сам декларирует нужные конвенции.
+ * переехала в buildSrc/src/main/kotlin/outbox.*.gradle.kts.
+ * buildSrc Gradle подхватывает АВТОМАТИЧЕСКИ — includeBuild в settings не нужен.
+ *
+ * Ни subprojects{}, ни allprojects{}, ни обращений к libs.* здесь больше нет.
  */
 tasks.register("checkAll") {
     group = "verification"

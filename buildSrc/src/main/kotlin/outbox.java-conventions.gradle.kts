@@ -1,19 +1,17 @@
-import org.gradle.accessors.dm.LibrariesForLibs
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 
 /**
  * Базовая конвенция: применяется каждым модулем прямо или транзитивно.
- * Здесь только то, что обязано быть одинаковым везде — toolchain, флаги
- * компилятора, запуск тестов, Javadoc. Ничего Spring-специфичного:
- * outbox-core не должен получать Spring транзитивно отсюда.
+ * Только то, что обязано быть одинаковым везде: toolchain, флаги компилятора,
+ * запуск тестов, Javadoc. Ничего Spring-специфичного — outbox-core не должен
+ * получать Spring транзитивно отсюда.
  */
 plugins {
     `java-library`
 }
 
-// В precompiled script plugin type-safe аксессор `libs` НЕ генерируется.
+// В precompiled script plugin type-safe аксессор `libs` не генерируется.
 // the<LibrariesForLibs>() достаёт тот же каталог по типу, а не по имени.
-val libs = the<LibrariesForLibs>()
 
 group = "com.company.outbox"
 version = providers.gradleProperty("outboxVersion").getOrElse("0.0.1-SNAPSHOT")

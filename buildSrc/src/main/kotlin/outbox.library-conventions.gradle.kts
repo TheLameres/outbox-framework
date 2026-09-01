@@ -1,9 +1,7 @@
 /**
- * Для модулей, которые ПУБЛИКУЮТСЯ в Nexus как библиотека:
+ * Для модулей, публикуемых в Nexus как библиотека:
  * outbox-core, outbox-jpa, outbox-kafka, outbox-spring-boot-starter.
- *
- * НЕ применяется к outbox-sample-service — приложение собирает bootJar
- * и как библиотека не публикуется.
+ * НЕ применяется к outbox-sample-service — приложению нужен только bootJar.
  */
 plugins {
     id("outbox.java-conventions")
