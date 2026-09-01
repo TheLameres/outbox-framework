@@ -1,3 +1,9 @@
+plugins {
+    id("outbox.library-conventions")
+    id("outbox.spring-conventions")
+    id("outbox.lombok-conventions")
+}
+
 description = "Spring Boot 4 starter: автоконфигурация, поллер на виртуальных потоках, метрики"
 
 dependencies {

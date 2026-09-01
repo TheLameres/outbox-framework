@@ -1,6 +1,10 @@
 HELP.md
 .gradle
 build/
+.kotlin/
+build-logic/build/
+build-logic/.gradle/
+build-logic/.kotlin/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/

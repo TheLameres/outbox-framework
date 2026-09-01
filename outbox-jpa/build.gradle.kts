@@ -1,3 +1,9 @@
+plugins {
+    id("outbox.library-conventions")
+    id("outbox.spring-conventions")   // Spring Boot BOM + JSpecify
+    id("outbox.lombok-conventions")   // @Getter/@Setter для JPA-сущностей
+}
+
 description = "JPA/Hibernate-хранилище outbox с SKIP LOCKED"
 
 dependencies {

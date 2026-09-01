@@ -1,6 +1,10 @@
-// ВАЖНО: pluginManagement обязан быть ПЕРВЫМ блоком в settings-скрипте,
-// иначе Gradle падает с "pluginManagement {} block must appear before any other statements".
+// ВАЖНО: pluginManagement обязан быть ПЕРВЫМ блоком в settings-скрипте.
 pluginManagement {
+    // includeBuild именно здесь, а не в plugins{} / dependencyResolutionManagement{}:
+    // только pluginManagement.includeBuild делает precompiled script plugins
+    // из build-logic доступными как id("outbox.*-conventions") во всех модулях.
+    includeBuild("build-logic")
+
     repositories {
         gradlePluginPortal()
         mavenCentral()
@@ -14,9 +18,8 @@ plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
 
-// Version catalog gradle/libs.versions.toml подхватывается автоматически
-// по конвенции и регистрирует аксессор `libs`. Отдельного versionCatalogs {}
-// блока не требуется начиная с Gradle 7.4.
+// Version catalog gradle/libs.versions.toml подхватывается по конвенции
+// и регистрирует аксессор `libs`. Отдельный versionCatalogs{} не нужен с Gradle 7.4.
 dependencyResolutionManagement {
     repositoriesMode = RepositoriesMode.PREFER_SETTINGS
     repositories {

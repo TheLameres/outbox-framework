@@ -1,3 +1,9 @@
+plugins {
+    id("outbox.library-conventions")
+    id("outbox.spring-conventions")
+    id("outbox.lombok-conventions")   // @Slf4j в KafkaOutboxPublisher
+}
+
 description = "Kafka-публикатор outbox-сообщений"
 
 dependencies {

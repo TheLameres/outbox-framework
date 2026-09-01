@@ -1,5 +1,9 @@
 plugins {
-    id("org.springframework.boot")
+    // spring-boot-app-conventions сам применяет java-conventions
+    // и плагин org.springframework.boot (версия уже на classpath build-logic).
+    id("outbox.spring-boot-app-conventions")
+    id("outbox.spring-conventions")
+    id("outbox.lombok-conventions")
 }
 
 description = "Пример сервиса-потребителя фреймворка"
