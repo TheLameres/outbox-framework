@@ -1,0 +1,60 @@
+spring:
+  application:
+    name: orders-service
+
+  # Виртуальные потоки для Tomcat и @Async (Java 21 + Spring Boot 3.2+)
+  threads:
+    virtual:
+      enabled: true
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/orders
+    username: orders
+    password: secret
+    hikari:
+      maximum-pool-size: 20
+
+  jpa:
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc.batch_size: 50
+        order_inserts: true
+        order_updates: true
+
+  flyway:
+    locations: classpath:db/migration, classpath:db/outbox
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      acks: all
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
+
+# ---- Настройки Outbox-фреймворка ----
+outbox:
+  enabled: true
+  polling:
+    enabled: true
+    interval: 500ms
+    batch-size: 200
+    virtual-threads: true      # публикация батча параллельно на virtual threads
+    concurrency: 64            # ограничитель одновременных отправок
+    in-flight-timeout: 5m
+  retry:
+    max-attempts: 5
+    send-timeout: 10s
+  cleanup:
+    enabled: true
+    retention: 7d
+    interval: 1h
+  kafka:
+    routing: SUFFIX            # SUFFIX | FIXED | BY_EVENT_TYPE
+    topic-suffix: -events
+
+management:
+  endpoints.web.exposure.include: health, metrics, prometheus
+  endpoint.health.show-details: always
+  metrics.tags.application: ${spring.application.name}
