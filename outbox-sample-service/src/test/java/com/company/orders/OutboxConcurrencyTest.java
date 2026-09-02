@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.company.outbox.core.OutboxMessage;
 import com.company.outbox.core.OutboxStore;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Callable;
 import org.junit.jupiter.api.Test;

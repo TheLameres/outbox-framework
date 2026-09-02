@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd">
+    <changeSet id="001-create-outbox-events" author="dev">
+
+        <createTable tableName="outbox_events">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="aggregate_type" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="aggregate_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="event_type" type="varchar(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="payload" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="headers" type="jsonb" defaultValueComputed="'{}'::jsonb">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="varchar(20)" defaultValue="PENDING">
+                <constraints nullable="false"/>
+            </column>
+            <column name="attempt" type="int" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_error" type="varchar(1000)"/>
+            <column name="created_at" type="timestamptz">
+                <constraints nullable="false"/>
+            </column>
+            <column name="claimed_at" type="timestamptz"/>
+            <column name="processed_at" type="timestamptz"/>
+            <column name="lock_version" type="bigint" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Обычный индекс — через тег, как положено -->
+        <createIndex indexName="idx_outbox_aggregate" tableName="outbox_events">
+            <column name="aggregate_type"/>
+            <column name="aggregate_id"/>
+        </createIndex>
+
+        <!-- Частичные индексы — только через raw SQL, т.к. атрибут where
+             не входит в XSD-схему Liquibase и не проходит валидацию -->
+        <sql>
+            CREATE INDEX idx_outbox_claimable
+            ON outbox_events (created_at)
+            WHERE status IN ('PENDING', 'IN_FLIGHT');
+        </sql>
+
+        <sql>
+            CREATE INDEX idx_outbox_purge
+            ON outbox_events (processed_at)
+            WHERE status = 'PROCESSED';
+        </sql>
+
+        <rollback>
+            <sql>DROP INDEX IF EXISTS idx_outbox_claimable;</sql>
+            <sql>DROP INDEX IF EXISTS idx_outbox_purge;</sql>
+            <dropTable tableName="outbox_events"/>
+        </rollback>
+
+    </changeSet>
+
+</databaseChangeLog>

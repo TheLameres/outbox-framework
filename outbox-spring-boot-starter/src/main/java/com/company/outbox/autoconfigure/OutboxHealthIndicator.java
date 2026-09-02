@@ -3,8 +3,8 @@ package com.company.outbox.autoconfigure;
 import com.company.outbox.core.OutboxStatus;
 import com.company.outbox.jpa.OutboxJpaRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.actuate.health.Health;
-import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.boot.health.contributor.Health;
+import org.springframework.boot.health.contributor.HealthIndicator;
 
 /** /actuator/health/outbox — DOWN, если накопились FAILED-сообщения. */
 @RequiredArgsConstructor

@@ -8,6 +8,8 @@ import com.company.outbox.jpa.OutboxJpaRepository;
 import com.company.outbox.kafka.KafkaOutboxPublisher;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import liquibase.Liquibase;
+import liquibase.integration.spring.SpringLiquibase;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -15,23 +17,30 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.ComponentScans;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import tools.jackson.databind.ObjectMapper;
 
+import javax.sql.DataSource;
+
 @AutoConfiguration
 @EnableConfigurationProperties(OutboxProperties.class)
-@ConditionalOnProperty(prefix = "outbox", name = "enabled", matchIfMissing = true)
+@EnableJpaRepositories(basePackages = "com.company.outbox.jpa")
+@EntityScan(basePackages = "com.company.outbox.jpa")
 public class OutboxAutoConfiguration {
 
     // ---------- хранилище ----------
 
     @Bean
-    @ConditionalOnBean(OutboxJpaRepository.class)
-    @ConditionalOnMissingBean(OutboxStore.class)
-    JpaOutboxStore jpaOutboxStore(OutboxJpaRepository repository) {
+    @ConditionalOnMissingBean
+    OutboxStore jpaOutboxStore(OutboxJpaRepository repository) {
         return new JpaOutboxStore(repository);
     }
 
@@ -61,8 +70,6 @@ public class OutboxAutoConfiguration {
         }
 
         @Bean
-        @ConditionalOnBean(KafkaTemplate.class)
-        @ConditionalOnMissingBean(OutboxPublisher.class)
         KafkaOutboxPublisher kafkaOutboxPublisher(KafkaTemplate<String, String> kafkaTemplate,
                                                   DestinationResolver resolver,
                                                   OutboxProperties properties) {

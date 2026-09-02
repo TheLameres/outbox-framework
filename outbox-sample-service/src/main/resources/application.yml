@@ -7,13 +7,6 @@ spring:
     virtual:
       enabled: true
 
-  datasource:
-    url: jdbc:postgresql://localhost:5432/orders
-    username: orders
-    password: secret
-    hikari:
-      maximum-pool-size: 20
-
   jpa:
     open-in-view: false
     properties:
@@ -21,9 +14,9 @@ spring:
         jdbc.batch_size: 50
         order_inserts: true
         order_updates: true
+  liquibase:
+    change-log: classpath:/db/changelog/db.changelog-master.xml
 
-  flyway:
-    locations: classpath:db/migration, classpath:db/outbox
 
   kafka:
     bootstrap-servers: localhost:9092
