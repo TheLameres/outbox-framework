@@ -2,11 +2,12 @@ package com.company.outbox.autoconfigure;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import java.time.Duration;
-import java.util.Map;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.validation.annotation.Validated;
+
+import java.time.Duration;
+import java.util.Map;
 
 /**
  * Конфигурация как record. С Spring Boot 3+ constructor binding для records

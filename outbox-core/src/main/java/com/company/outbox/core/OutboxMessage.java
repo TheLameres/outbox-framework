@@ -1,11 +1,7 @@
 package com.company.outbox.core;
 
 import java.time.Instant;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.SequencedMap;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Сообщение outbox. Полностью иммутабельный record — Lombok {@code @Value/@Builder}

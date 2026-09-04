@@ -1,15 +1,16 @@
 package com.company.orders;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.company.outbox.core.OutboxMessage;
 import com.company.outbox.core.OutboxStore;
-import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Callable;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Проверяет главное свойство SKIP LOCKED: два конкурентных claim

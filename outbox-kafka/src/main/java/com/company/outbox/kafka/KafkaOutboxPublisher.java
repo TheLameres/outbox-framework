@@ -4,13 +4,14 @@ import com.company.outbox.core.DestinationResolver;
 import com.company.outbox.core.OutboxMessage;
 import com.company.outbox.core.OutboxPublisher;
 import com.company.outbox.core.PublishOutcome;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.kafka.core.KafkaTemplate;
+
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RequiredArgsConstructor

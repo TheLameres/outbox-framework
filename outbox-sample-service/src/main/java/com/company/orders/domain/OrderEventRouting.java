@@ -1,7 +1,5 @@
 package com.company.orders.domain;
 
-import com.company.outbox.core.OutboxMessage;
-
 /** Маршрутизация на топики через pattern matching по sealed-иерархии. */
 public final class OrderEventRouting {
 

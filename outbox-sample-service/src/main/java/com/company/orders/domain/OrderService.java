@@ -2,12 +2,13 @@ package com.company.orders.domain;
 
 import com.company.outbox.autoconfigure.OutboxTemplate;
 import com.company.outbox.core.OutboxMessage;
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor

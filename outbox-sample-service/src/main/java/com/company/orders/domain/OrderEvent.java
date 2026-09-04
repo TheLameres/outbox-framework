@@ -1,6 +1,7 @@
 package com.company.orders.domain;
 
 import com.company.outbox.core.DomainEvent;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;

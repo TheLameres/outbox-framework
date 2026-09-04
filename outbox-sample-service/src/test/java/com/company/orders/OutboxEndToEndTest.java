@@ -1,36 +1,28 @@
 package com.company.orders;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-
 import com.company.orders.domain.OrderEvent;
 import com.company.orders.domain.OrderEventRouting;
 import com.company.orders.domain.OrderService;
 import com.company.outbox.core.OutboxStatus;
 import com.company.outbox.jpa.OutboxJpaRepository;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.UUID;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.springframework.context.annotation.Import;
-import org.testcontainers.kafka.KafkaContainer;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 /**
  * Тесты outbox гоняем ТОЛЬКО на реальном PostgreSQL: H2 молча игнорирует
  * SKIP LOCKED, и тест «зелёный» при сломанной конкурентности.
  */
 @SpringBootTest
-@Import(TestConfiguration.class)
+@Import(ContainersConfiguration.class)
 class OutboxEndToEndTest {
 
     @Autowired

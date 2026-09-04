@@ -4,9 +4,10 @@ import com.company.outbox.core.DomainEvent;
 import com.company.outbox.core.OutboxMessage;
 import com.company.outbox.core.OutboxMessageConverter;
 import com.company.outbox.core.OutboxStore;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import tools.jackson.databind.ObjectMapper;
+
+import java.util.List;
 
 /**
  * Единственный API, который видит бизнес-код.
