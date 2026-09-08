@@ -3,8 +3,8 @@ package io.txbox.producer.starter;
 import io.txbox.core.store.MessageStats;
 import io.txbox.producer.jpa.store.JpaOutboxStore;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.actuate.health.Health;
-import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.boot.health.contributor.Health;
+import org.springframework.boot.health.contributor.HealthIndicator;
 
 import java.time.Duration;
 import java.time.Instant;
