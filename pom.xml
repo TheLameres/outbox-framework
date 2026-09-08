@@ -19,6 +19,12 @@
     </properties>
 
     <modules>
+        <!-- Shared (Phase 1) -->
+        <module>txbox-core</module>
+        <module>txbox-jpa</module>
+        <module>txbox-kafka</module>
+
+        <!-- Legacy producer modules (kept until Phase 2 migration) -->
         <module>outbox-core</module>
         <module>outbox-jpa</module>
         <module>outbox-kafka</module>
@@ -28,6 +34,23 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- Shared (Phase 1) -->
+            <dependency>
+                <groupId>thelameres</groupId>
+                <artifactId>txbox-core</artifactId>
+                <version>${outbox-framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>thelameres</groupId>
+                <artifactId>txbox-jpa</artifactId>
+                <version>${outbox-framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>thelameres</groupId>
+                <artifactId>txbox-kafka</artifactId>
+                <version>${outbox-framework.version}</version>
+            </dependency>
+            <!-- Legacy producer modules -->
             <dependency>
                 <groupId>thelameres</groupId>
                 <artifactId>outbox-core</artifactId>
