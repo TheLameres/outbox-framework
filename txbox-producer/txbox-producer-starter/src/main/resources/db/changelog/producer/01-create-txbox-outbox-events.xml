@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd">
+
+    <changeSet id="producer-001-create-txbox-outbox-events" author="txbox">
+        <preConditions onFail="MARK_RAN">
+            <!-- создаём только если таблица ещё не существует -->
+            <not><tableExists tableName="txbox_outbox_events"/></not>
+            <not><tableExists tableName="outbox_events"/></not>
+        </preConditions>
+
+        <createTable tableName="txbox_outbox_events">
+            <column name="message_id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="aggregate_type" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="aggregate_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="event_type" type="varchar(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="payload" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="headers" type="jsonb" defaultValueComputed="'{}'::jsonb">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="varchar(20)" defaultValue="PENDING">
+                <constraints nullable="false"/>
+            </column>
+            <column name="attempt" type="int" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_error" type="varchar(2000)"/>
+            <column name="created_at" type="timestamptz">
+                <constraints nullable="false"/>
+            </column>
+            <column name="claimed_at" type="timestamptz"/>
+            <column name="processed_at" type="timestamptz"/>
+            <column name="lock_version" type="bigint" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_txbox_outbox_aggregate"
+                     tableName="txbox_outbox_events">
+            <column name="aggregate_type"/>
+            <column name="aggregate_id"/>
+        </createIndex>
+
+        <!-- Partial indexes через raw SQL (WHERE не входит в XSD Liquibase) -->
+        <sql>
+            CREATE INDEX idx_txbox_outbox_claimable
+            ON txbox_outbox_events (created_at)
+            WHERE status IN ('PENDING', 'IN_FLIGHT');
+        </sql>
+        <sql>
+            CREATE INDEX idx_txbox_outbox_purge
+            ON txbox_outbox_events (processed_at)
+            WHERE status IN ('PROCESSED', 'FAILED', 'SKIPPED');
+        </sql>
+
+        <rollback>
+            <sql>DROP INDEX IF EXISTS idx_txbox_outbox_claimable;</sql>
+            <sql>DROP INDEX IF EXISTS idx_txbox_outbox_purge;</sql>
+            <dropTable tableName="txbox_outbox_events"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

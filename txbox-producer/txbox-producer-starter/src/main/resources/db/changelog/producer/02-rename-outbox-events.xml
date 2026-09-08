@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd">
+
+    <!--
+        Миграция для существующих установок, где таблица называлась outbox_events.
+        Выполняется только если outbox_events существует и txbox_outbox_events — нет.
+    -->
+    <changeSet id="producer-002-rename-outbox-events" author="txbox">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="outbox_events"/>
+            <not><tableExists tableName="txbox_outbox_events"/></not>
+        </preConditions>
+
+        <renameTable oldTableName="outbox_events"
+                     newTableName="txbox_outbox_events"/>
+
+        <!-- Старый PK именовался по-другому — переименовываем индексы -->
+        <sql>
+            ALTER INDEX IF EXISTS idx_outbox_claimable
+                RENAME TO idx_txbox_outbox_claimable;
+        </sql>
+        <sql>
+            ALTER INDEX IF EXISTS idx_outbox_aggregate
+                RENAME TO idx_txbox_outbox_aggregate;
+        </sql>
+        <sql>
+            ALTER INDEX IF EXISTS idx_outbox_purge
+                RENAME TO idx_txbox_outbox_purge;
+        </sql>
+
+        <!-- Переименовываем колонку id → message_id если нужно -->
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="txbox_outbox_events" columnName="id"/>
+        </preConditions>
+        <renameColumn tableName="txbox_outbox_events"
+                      oldColumnName="id"
+                      newColumnName="message_id"
+                      columnDataType="uuid"/>
+
+        <rollback>
+            <renameColumn tableName="txbox_outbox_events"
+                          oldColumnName="message_id"
+                          newColumnName="id"
+                          columnDataType="uuid"/>
+            <renameTable oldTableName="txbox_outbox_events"
+                         newTableName="outbox_events"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
