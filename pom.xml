@@ -27,6 +27,8 @@
         <!-- Producer (Phase 2) -->
         <module>txbox-producer</module>
 
+        <module>txbox-consumer</module>
+
         <!-- Legacy producer modules (kept until Phase 2 migration completes) -->
         <module>outbox-core</module>
         <module>outbox-jpa</module>
