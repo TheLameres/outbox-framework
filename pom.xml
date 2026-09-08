@@ -74,6 +74,27 @@
                 <artifactId>txbox-producer-starter</artifactId>
                 <version>${outbox-framework.version}</version>
             </dependency>
+            <!-- Consumer (Phase 3) -->
+            <dependency>
+                <groupId>thelameres</groupId>
+                <artifactId>txbox-consumer-api</artifactId>
+                <version>${outbox-framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>thelameres</groupId>
+                <artifactId>txbox-consumer-jpa</artifactId>
+                <version>${outbox-framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>thelameres</groupId>
+                <artifactId>txbox-consumer-kafka</artifactId>
+                <version>${outbox-framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>thelameres</groupId>
+                <artifactId>txbox-consumer-starter</artifactId>
+                <version>${outbox-framework.version}</version>
+            </dependency>
             <!-- Legacy producer modules -->
             <dependency>
                 <groupId>thelameres</groupId>
