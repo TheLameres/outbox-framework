@@ -24,7 +24,10 @@
         <module>txbox-jpa</module>
         <module>txbox-kafka</module>
 
-        <!-- Legacy producer modules (kept until Phase 2 migration) -->
+        <!-- Producer (Phase 2) -->
+        <module>txbox-producer</module>
+
+        <!-- Legacy producer modules (kept until Phase 2 migration completes) -->
         <module>outbox-core</module>
         <module>outbox-jpa</module>
         <module>outbox-kafka</module>
@@ -48,6 +51,27 @@
             <dependency>
                 <groupId>thelameres</groupId>
                 <artifactId>txbox-kafka</artifactId>
+                <version>${outbox-framework.version}</version>
+            </dependency>
+            <!-- Producer (Phase 2) -->
+            <dependency>
+                <groupId>thelameres</groupId>
+                <artifactId>txbox-producer-api</artifactId>
+                <version>${outbox-framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>thelameres</groupId>
+                <artifactId>txbox-producer-jpa</artifactId>
+                <version>${outbox-framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>thelameres</groupId>
+                <artifactId>txbox-producer-kafka</artifactId>
+                <version>${outbox-framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>thelameres</groupId>
+                <artifactId>txbox-producer-starter</artifactId>
                 <version>${outbox-framework.version}</version>
             </dependency>
             <!-- Legacy producer modules -->

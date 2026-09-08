@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>thelameres</groupId>
+        <artifactId>outbox-framework</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>txbox-producer</artifactId>
+    <packaging>pom</packaging>
+    <name>TxBox :: Producer</name>
+    <description>Transactional Outbox producer-side modules</description>
+
+    <modules>
+        <module>txbox-producer-api</module>
+        <module>txbox-producer-jpa</module>
+        <module>txbox-producer-kafka</module>
+        <module>txbox-producer-starter</module>
+    </modules>
+
+</project>
