@@ -9,6 +9,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.validation.annotation.Validated;
 
+import java.util.List;
+
 /**
  * Конфигурация для consumer (inbox) обработки.
  *
@@ -23,14 +25,28 @@ import org.springframework.validation.annotation.Validated;
  *       poll-timeout-ms: 3000
  *     jpa:
  *       batch-size: 100
+ *     domain-event-base-packages:
+ *       - io.myservice.events
+ *       - io.myservice.order.events
  * </pre>
+ *
+ * <p>Если {@code domain-event-base-packages} не задан, сканирование выполняется
+ * по пакетам, зарегистрированным аннотацией {@code @SpringBootApplication}
+ * (через {@code AutoConfigurationPackages}).
  */
 @ConfigurationProperties(prefix = "txbox.consumer")
 @Validated
 public record InboxProperties(
         @Valid @DefaultValue InboxProperties.InboxKafkaProperties kafka,
-        @Valid @DefaultValue InboxProperties.InboxJpaProperties jpa
+        @Valid @DefaultValue InboxProperties.InboxJpaProperties jpa,
+        @DefaultValue List<String> domainEventBasePackages
 ) implements InboxConfiguration {
+
+    public InboxProperties {
+        if (domainEventBasePackages == null) {
+            domainEventBasePackages = List.of();
+        }
+    }
 
     public record InboxKafkaProperties(
             @NotBlank(message = "Kafka topic required")

@@ -6,7 +6,9 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
-public sealed interface OrderEvents extends DomainEvent {
+public sealed interface OrderEvents {
+
+    @DomainEvent
     record OrderCreated(UUID id,
                         BigDecimal sum,
                         String productName,

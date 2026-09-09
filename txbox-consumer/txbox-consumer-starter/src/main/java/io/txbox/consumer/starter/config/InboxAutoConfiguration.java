@@ -26,6 +26,7 @@ import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.adapter.KafkaMessageHandlerMethodFactory;
 import org.springframework.messaging.handler.annotation.support.DefaultMessageHandlerMethodFactory;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Spring Boot auto-configuration для consumer-side (inbox).
@@ -47,8 +48,9 @@ public class InboxAutoConfiguration {
     }
 
     @Bean
-    public InboxEventDispatcher inboxEventDispatcher(ApplicationContext context) {
-        return new InboxEventDispatcher(context);
+    public InboxEventDispatcher inboxEventDispatcher(ApplicationContext context,
+                                                     ObjectMapper objectMapper) {
+        return new InboxEventDispatcher(context, objectMapper, properties);
     }
 
     @Bean
@@ -104,6 +106,4 @@ public class InboxAutoConfiguration {
                 messageHandlerMethodFactory
         );
     }
-
-
 }
