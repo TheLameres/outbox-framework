@@ -35,9 +35,9 @@
         </sql>
 
         <!-- Переименовываем колонку id → message_id если нужно -->
-        <preConditions onFail="MARK_RAN">
-            <columnExists tableName="txbox_outbox_events" columnName="id"/>
-        </preConditions>
+<!--        <preConditions onFail="MARK_RAN">-->
+<!--            <columnExists tableName="txbox_outbox_events" columnName="id"/>-->
+<!--        </preConditions>-->
         <renameColumn tableName="txbox_outbox_events"
                       oldColumnName="id"
                       newColumnName="message_id"

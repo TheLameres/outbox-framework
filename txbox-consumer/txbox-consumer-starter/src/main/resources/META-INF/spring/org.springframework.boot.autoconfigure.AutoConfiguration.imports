@@ -1,2 +1,1 @@
-org.springframework.boot.autoconfigure.AutoConfiguration=\
 io.txbox.consumer.starter.config.InboxAutoConfiguration

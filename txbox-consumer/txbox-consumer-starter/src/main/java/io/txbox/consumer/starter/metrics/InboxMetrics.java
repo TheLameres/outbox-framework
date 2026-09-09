@@ -23,9 +23,9 @@ public class InboxMetrics {
         try {
             MessageStats stats = store.getStats();
 
-            registry.gauge("txbox.inbox.received", stats.receivedCount());
-            registry.gauge("txbox.inbox.processed", stats.processedCount());
-            registry.gauge("txbox.inbox.failed", stats.failedCount());
+            registry.gauge("txbox.inbox.received", stats.received());
+            registry.gauge("txbox.inbox.processed", stats.processed());
+            registry.gauge("txbox.inbox.failed", stats.failed());
 
         } catch (Exception e) {
             // Ignore — метрики не критичны

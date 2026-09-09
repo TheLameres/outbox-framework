@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: txbox-full-example
+  liquibase:
+    change-log: classpath:/db/changelog/db.changelog-master.xml

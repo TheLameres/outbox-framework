@@ -28,6 +28,8 @@
         <module>txbox-consumer</module>
         <module>txbox-producer</module>
 
+        <module>txbox-examples</module>
+
     </modules>
 
     <dependencyManagement>
