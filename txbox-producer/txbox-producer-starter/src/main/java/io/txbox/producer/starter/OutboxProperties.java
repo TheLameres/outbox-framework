@@ -50,7 +50,7 @@ public record OutboxProperties(
     public record Kafka(
             @DefaultValue("SUFFIX") Routing routing,
             @DefaultValue("-events") String topicSuffix,
-            @DefaultValue("txbox-events") String fixedTopic,
+            @DefaultValue("domain.events") String fixedTopic,
             @DefaultValue Map<String, String> topicByEventType
     ) {
         public enum Routing {SUFFIX, FIXED, BY_EVENT_TYPE}

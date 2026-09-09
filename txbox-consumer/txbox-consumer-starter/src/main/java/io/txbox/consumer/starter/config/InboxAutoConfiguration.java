@@ -9,6 +9,7 @@ import io.txbox.consumer.jpa.store.JpaInboxStore;
 import io.txbox.consumer.starter.registrar.InboxKafkaListenerRegistrar;
 import io.txbox.consumer.store.InboxStore;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
@@ -30,7 +31,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
  * Spring Boot auto-configuration для consumer-side (inbox).
  * Регистрирует бины для Kafka listener'а и JPA store.
  */
-@Configuration
+@AutoConfiguration
 @EnableConfigurationProperties(InboxProperties.class)
 @EnableJpaRepositories(basePackageClasses = InboxJpaRepository.class)
 @EntityScan(basePackages = "io.txbox.consumer.jpa.entity")
@@ -46,13 +47,11 @@ public class InboxAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean
     public InboxEventDispatcher inboxEventDispatcher(ApplicationContext context) {
         return new InboxEventDispatcher(context);
     }
 
     @Bean
-    @ConditionalOnMissingBean
     public InboxKafkaListener inboxKafkaListener(InboxStore store,
                                                  InboxEventDispatcher dispatcher) {
         return new InboxKafkaListener(store, dispatcher);

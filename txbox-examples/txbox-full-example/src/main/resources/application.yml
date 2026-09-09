@@ -6,3 +6,14 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+
+txbox.producer:
+  enabled: true
+  kafka:
+    routing: FIXED
+    fixed-topic: domain.events
+
+logging:
+  level:
+    io:
+      txbox: DEBUG

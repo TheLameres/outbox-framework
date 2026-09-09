@@ -7,6 +7,7 @@ import io.txbox.consumer.outcome.ProcessingOutcome;
 import io.txbox.consumer.kafka.util.ProcessingOutcomeClassifier;
 import io.txbox.core.model.InboxMessage;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
@@ -29,23 +30,20 @@ import java.util.*;
  * 3. Классифицирует исключения через {@link ProcessingOutcomeClassifier}
  */
 @Slf4j
-@Component
-public class InboxEventDispatcher {
+public class InboxEventDispatcher implements InitializingBean {
 
     private final Map<String, List<HandlerMethod>> handlersIndex = new LinkedHashMap<>();
     private final ApplicationContext context;
 
-    @Autowired
     public InboxEventDispatcher(ApplicationContext context) {
         this.context = context;
-        initializeHandlers();
     }
 
     /**
      * Инициализирует индекс handlers'ов.
      * Вызывается один раз при старте.
      */
-    private void initializeHandlers() {
+    public void afterPropertiesSet() {
         Map<String, Object> listeners = context.getBeansWithAnnotation(InboxEventListener.class);
 
         for (Object listener : listeners.values()) {
