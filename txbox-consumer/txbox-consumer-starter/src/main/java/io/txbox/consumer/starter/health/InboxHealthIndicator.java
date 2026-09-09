@@ -3,8 +3,8 @@ package io.txbox.consumer.starter.health;
 import io.txbox.consumer.store.InboxStore;
 import io.txbox.core.store.MessageStats;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.actuate.health.Health;
-import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.boot.health.contributor.Health;
+import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.stereotype.Component;
 
 /**

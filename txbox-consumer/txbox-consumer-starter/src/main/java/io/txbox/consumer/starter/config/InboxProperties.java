@@ -1,11 +1,7 @@
 package io.txbox.consumer.starter.config;
 
-import lombok.record;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
-
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.*;
 
 /**
  * Конфигурация для consumer (inbox) обработки.

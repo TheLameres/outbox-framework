@@ -4,7 +4,7 @@ import io.txbox.consumer.annotation.InboxEventHandler;
 import io.txbox.consumer.annotation.InboxEventListener;
 import io.txbox.consumer.model.InboundEventContext;
 import io.txbox.consumer.outcome.ProcessingOutcome;
-import io.txbox.consumer.outcome.ProcessingOutcomeClassifier;
+import io.txbox.consumer.kafka.util.ProcessingOutcomeClassifier;
 import io.txbox.core.model.InboxMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
