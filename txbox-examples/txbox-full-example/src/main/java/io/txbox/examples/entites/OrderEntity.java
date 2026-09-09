@@ -1,5 +1,6 @@
 package io.txbox.examples.entites;
 
+import io.txbox.examples.dto.OrderStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,4 +22,9 @@ public class OrderEntity extends AbstractEntity {
     private BigDecimal sum;
 
     private String productName;
+
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status = OrderStatus.CREATED;
+
+
 }

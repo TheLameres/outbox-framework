@@ -10,7 +10,9 @@
             <column name="id" type="uuid"/>
             <column name="sum" type="java.math.BigDecimal"/>
             <column name="product_name" type="java.lang.String"/>
-            <column name="occurred_at" type="timestamp"/>
+            <column name="created_at" type="timestamp"/>
+            <column name="updated_at" type="timestamp"/>
+            <column name="status" type="java.lang.String"/>
         </createTable>
     </changeSet>
 
