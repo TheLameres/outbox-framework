@@ -56,26 +56,15 @@ public class OutboxPoller {
                 .register(meters);
     }
 
-    /** Локальный record — группировка результатов без отдельного файла. */
-    private record BatchResult(int published, int retried, int fatal) {
-        static BatchResult of(List<PublishOutcome> outcomes) {
-            int published = 0;
-            int retried = 0;
-            int fatal = 0;
-            for (PublishOutcome outcome : outcomes) {
-                // Pattern matching for switch по sealed-иерархии
-                switch (outcome) {
-                    case PublishOutcome.Published ignored -> published++;
-                    case PublishOutcome.Skipped ignored -> published++;
-                    case PublishOutcome.Retryable ignored -> retried++;
-                    case PublishOutcome.Fatal ignored -> fatal++;
-                }
-            }
-            return new BatchResult(published, retried, fatal);
-        }
-
-        boolean isEmpty() {
-            return published + retried + fatal == 0;
+    private static PublishOutcome resultOf(Future<PublishOutcome> future) {
+        try {
+            return future.get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return null;
+        } catch (java.util.concurrent.ExecutionException e) {
+            log.error("outbox: publisher task failed", e.getCause());
+            return null;
         }
     }
 
@@ -108,7 +97,9 @@ public class OutboxPoller {
         }
     }
 
-    /** Виртуальные потоки: один поток на сообщение, никакого пула настраивать не нужно. */
+    /**
+     * Виртуальные потоки: один поток на сообщение, никакого пула настраивать не нужно.
+     */
     private List<PublishOutcome> publishConcurrently(List<OutboxMessage> batch) {
         var limiter = new Semaphore(properties.polling().concurrency());
 
@@ -170,15 +161,28 @@ public class OutboxPoller {
         lagSeconds.set(lag.toSeconds());
     }
 
-    private static PublishOutcome resultOf(Future<PublishOutcome> future) {
-        try {
-            return future.get();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return null;
-        } catch (java.util.concurrent.ExecutionException e) {
-            log.error("outbox: publisher task failed", e.getCause());
-            return null;
+    /**
+     * Локальный record — группировка результатов без отдельного файла.
+     */
+    private record BatchResult(int published, int retried, int fatal) {
+        static BatchResult of(List<PublishOutcome> outcomes) {
+            int published = 0;
+            int retried = 0;
+            int fatal = 0;
+            for (PublishOutcome outcome : outcomes) {
+                // Pattern matching for switch по sealed-иерархии
+                switch (outcome) {
+                    case PublishOutcome.Published ignored -> published++;
+                    case PublishOutcome.Skipped ignored -> published++;
+                    case PublishOutcome.Retryable ignored -> retried++;
+                    case PublishOutcome.Fatal ignored -> fatal++;
+                }
+            }
+            return new BatchResult(published, retried, fatal);
+        }
+
+        boolean isEmpty() {
+            return published + retried + fatal == 0;
         }
     }
 }

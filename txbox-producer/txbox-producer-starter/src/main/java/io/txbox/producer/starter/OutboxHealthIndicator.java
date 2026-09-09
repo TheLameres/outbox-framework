@@ -24,9 +24,9 @@ public class OutboxHealthIndicator implements HealthIndicator {
     public Health health() {
         MessageStats stats = store.getStats();
         var builder = Health.up()
-                .withDetail("pending",  stats.pending())
+                .withDetail("pending", stats.pending())
                 .withDetail("inFlight", stats.inFlight())
-                .withDetail("failed",   stats.failed());
+                .withDetail("failed", stats.failed());
 
         if (stats.oldestUnprocessed() != null) {
             Duration lag = Duration.between(stats.oldestUnprocessed(), Instant.now());

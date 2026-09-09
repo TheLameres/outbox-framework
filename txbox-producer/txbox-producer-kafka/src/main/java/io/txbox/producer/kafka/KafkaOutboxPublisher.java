@@ -26,6 +26,18 @@ public class KafkaOutboxPublisher implements OutboxPublisher {
     private final DestinationResolver destinationResolver;
     private final Duration sendTimeout;
 
+    private static PublishOutcome classifyKafkaError(java.util.UUID messageId, Throwable cause) {
+        return switch (cause) {
+            case org.apache.kafka.common.errors.RetriableException r ->
+                    new PublishOutcome.Retryable(messageId, "kafka retriable: " + r.getMessage(), r);
+            case org.apache.kafka.common.errors.RecordTooLargeException r ->
+                    new PublishOutcome.Fatal(messageId, "record too large", r);
+            case org.apache.kafka.common.errors.SerializationException r ->
+                    new PublishOutcome.Fatal(messageId, "serialization failed", r);
+            default -> new PublishOutcome.Retryable(messageId, cause.getMessage(), cause);
+        };
+    }
+
     @Override
     public PublishOutcome publish(OutboxMessage message) {
         String topic = destinationResolver.resolve(message);
@@ -50,18 +62,5 @@ public class KafkaOutboxPublisher implements OutboxPublisher {
         } catch (java.util.concurrent.TimeoutException e) {
             return new PublishOutcome.Retryable(message.messageId(), "send timeout", e);
         }
-    }
-
-    private static PublishOutcome classifyKafkaError(java.util.UUID messageId, Throwable cause) {
-        return switch (cause) {
-            case org.apache.kafka.common.errors.RetriableException r ->
-                    new PublishOutcome.Retryable(messageId, "kafka retriable: " + r.getMessage(), r);
-            case org.apache.kafka.common.errors.RecordTooLargeException r ->
-                    new PublishOutcome.Fatal(messageId, "record too large", r);
-            case org.apache.kafka.common.errors.SerializationException r ->
-                    new PublishOutcome.Fatal(messageId, "serialization failed", r);
-            default ->
-                    new PublishOutcome.Retryable(messageId, cause.getMessage(), cause);
-        };
     }
 }

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
@@ -25,16 +25,9 @@
         <module>txbox-kafka</module>
 
         <!-- Producer (Phase 2) -->
+        <module>txbox-consumer</module>
         <module>txbox-producer</module>
 
-        <module>txbox-consumer</module>
-
-        <!-- Legacy producer modules (kept until Phase 2 migration completes) -->
-        <module>outbox-core</module>
-        <module>outbox-jpa</module>
-        <module>outbox-kafka</module>
-        <module>outbox-spring-boot-starter</module>
-        <module>outbox-sample-service</module>
     </modules>
 
     <dependencyManagement>
@@ -95,27 +88,6 @@
             <dependency>
                 <groupId>thelameres</groupId>
                 <artifactId>txbox-consumer-starter</artifactId>
-                <version>${outbox-framework.version}</version>
-            </dependency>
-            <!-- Legacy producer modules -->
-            <dependency>
-                <groupId>thelameres</groupId>
-                <artifactId>outbox-core</artifactId>
-                <version>${outbox-framework.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>thelameres</groupId>
-                <artifactId>outbox-jpa</artifactId>
-                <version>${outbox-framework.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>thelameres</groupId>
-                <artifactId>outbox-kafka</artifactId>
-                <version>${outbox-framework.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>thelameres</groupId>
-                <artifactId>outbox-spring-boot-starter</artifactId>
                 <version>${outbox-framework.version}</version>
             </dependency>
         </dependencies>

@@ -15,20 +15,15 @@ import java.util.UUID;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class OrderEntity {
 
-    public enum Status { NEW, COMPLETED, CANCELLED }
-
     @Id
     @ToString.Include
     @EqualsAndHashCode.Include
     private UUID id;
-
     private UUID customerId;
     private BigDecimal total;
-
     @Enumerated(EnumType.STRING)
     @ToString.Include
     private Status status;
-
     private Instant createdAt;
 
     static OrderEntity create(UUID customerId, BigDecimal total) {
@@ -52,4 +47,6 @@ public class OrderEntity {
     boolean isPaid() {
         return status == Status.COMPLETED;
     }
+
+    public enum Status {NEW, COMPLETED, CANCELLED}
 }

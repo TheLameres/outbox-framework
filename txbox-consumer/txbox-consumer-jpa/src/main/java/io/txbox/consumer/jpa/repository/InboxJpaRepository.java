@@ -21,7 +21,9 @@ public interface InboxJpaRepository extends JpaRepository<InboxMessageEntity, UU
      */
     Optional<InboxMessageEntity> findByPartitionAndOffset(int partition, long offset);
 
-    /** Для health-check и метрик. */
+    /**
+     * Для health-check и метрик.
+     */
     long countByStatus(MessageStatus status);
 
     /**

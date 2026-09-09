@@ -21,6 +21,12 @@ public class KafkaOutboxPublisher implements OutboxPublisher {
     private final DestinationResolver destinationResolver;
     private final Duration sendTimeout;
 
+    private static void addHeader(ProducerRecord<String, String> record, String key, String value) {
+        if (value != null) {
+            record.headers().add(key, value.getBytes(StandardCharsets.UTF_8));
+        }
+    }
+
     @Override
     public PublishOutcome publish(OutboxMessage message) {
         String topic = destinationResolver.resolve(message);
@@ -54,18 +60,11 @@ public class KafkaOutboxPublisher implements OutboxPublisher {
                         new PublishOutcome.Fatal(message.id(), "record too large", tooLarge);
                 case org.apache.kafka.common.errors.SerializationException serde ->
                         new PublishOutcome.Fatal(message.id(), "serialization failed", serde);
-                default ->
-                        new PublishOutcome.Retryable(message.id(), cause.getMessage(), cause);
+                default -> new PublishOutcome.Retryable(message.id(), cause.getMessage(), cause);
             };
 
         } catch (java.util.concurrent.TimeoutException e) {
             return new PublishOutcome.Retryable(message.id(), "send timeout", e);
-        }
-    }
-
-    private static void addHeader(ProducerRecord<String, String> record, String key, String value) {
-        if (value != null) {
-            record.headers().add(key, value.getBytes(StandardCharsets.UTF_8));
         }
     }
 }

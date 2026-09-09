@@ -1,6 +1,8 @@
 package com.company.orders.domain;
 
-/** Маршрутизация на топики через pattern matching по sealed-иерархии. */
+/**
+ * Маршрутизация на топики через pattern matching по sealed-иерархии.
+ */
 public final class OrderEventRouting {
 
     private OrderEventRouting() {
@@ -21,7 +23,9 @@ public final class OrderEventRouting {
         };
     }
 
-    /** Record pattern: деструктуризация прямо в case-метке. */
+    /**
+     * Record pattern: деструктуризация прямо в case-метке.
+     */
     public static String describe(OrderEvent event) {
         return switch (event) {
             case OrderEvent.Created(var id, var customer, var total, var at) ->

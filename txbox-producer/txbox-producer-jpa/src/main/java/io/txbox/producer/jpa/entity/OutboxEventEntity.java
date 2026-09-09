@@ -3,7 +3,10 @@ package io.txbox.producer.jpa.entity;
 import io.txbox.core.model.MessageStatus;
 import io.txbox.core.model.OutboxMessage;
 import io.txbox.jpa.entity.AbstractMessageEntity;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,7 +15,6 @@ import lombok.ToString;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.SequencedMap;
-import java.util.UUID;
 
 /**
  * JPA-сущность outbox. Расширяет {@link AbstractMessageEntity},
@@ -27,7 +29,7 @@ import java.util.UUID;
         indexes = {
                 @Index(name = "idx_txbox_outbox_claimable", columnList = "status, created_at"),
                 @Index(name = "idx_txbox_outbox_aggregate", columnList = "aggregate_type, aggregate_id"),
-                @Index(name = "idx_txbox_outbox_purge",     columnList = "processed_at")
+                @Index(name = "idx_txbox_outbox_purge", columnList = "processed_at")
         }
 )
 @Getter
@@ -54,32 +56,32 @@ public class OutboxEventEntity extends AbstractMessageEntity {
 
     // ── setter нужен только для applyOutcomes (PENDING при retry) ────────────
 
-    public void setStatus(MessageStatus status) {
-        this.status = status;
+    public static OutboxEventEntity from(OutboxMessage m) {
+        var e = new OutboxEventEntity();
+        e.messageId = m.messageId();
+        e.aggregateType = m.aggregateType();
+        e.aggregateId = m.aggregateId();
+        e.eventType = m.eventType();
+        e.payload = m.payload();
+        e.headers = new LinkedHashMap<>(m.headers());
+        e.createdAt = m.timestamp();
+        e.attempt = m.attempt();
+        e.status = MessageStatus.PENDING;
+        return e;
     }
 
     // ── producer-специфичные переходы ─────────────────────────────────────
 
-    public void markInFlight() {
-        this.status    = MessageStatus.IN_FLIGHT;
-        this.claimedAt = Instant.now();
-        this.attempt++;
+    public void setStatus(MessageStatus status) {
+        this.status = status;
     }
 
     // ── маппинг ───────────────────────────────────────────────────────────
 
-    public static OutboxEventEntity from(OutboxMessage m) {
-        var e = new OutboxEventEntity();
-        e.messageId     = m.messageId();
-        e.aggregateType = m.aggregateType();
-        e.aggregateId   = m.aggregateId();
-        e.eventType     = m.eventType();
-        e.payload       = m.payload();
-        e.headers       = new LinkedHashMap<>(m.headers());
-        e.createdAt     = m.timestamp();
-        e.attempt       = m.attempt();
-        e.status        = MessageStatus.PENDING;
-        return e;
+    public void markInFlight() {
+        this.status = MessageStatus.IN_FLIGHT;
+        this.claimedAt = Instant.now();
+        this.attempt++;
     }
 
     public OutboxMessage toMessage() {

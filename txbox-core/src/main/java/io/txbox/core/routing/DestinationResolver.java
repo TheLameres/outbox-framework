@@ -12,13 +12,15 @@ import java.util.Objects;
  */
 public sealed interface DestinationResolver
         permits DestinationResolver.BySuffix,
-                DestinationResolver.Fixed,
-                DestinationResolver.ByEventType,
-                DestinationResolver.Chain {
+        DestinationResolver.Fixed,
+        DestinationResolver.ByEventType,
+        DestinationResolver.Chain {
 
     String resolve(OutboxMessage message);
 
-    /** {@code "Order"} → {@code "order-events"} */
+    /**
+     * {@code "Order"} → {@code "order-events"}
+     */
     record BySuffix(String suffix) implements DestinationResolver {
         public BySuffix {
             Objects.requireNonNull(suffix, "suffix");
@@ -30,7 +32,9 @@ public sealed interface DestinationResolver
         }
     }
 
-    /** Все события — в один фиксированный топик. */
+    /**
+     * Все события — в один фиксированный топик.
+     */
     record Fixed(String destination) implements DestinationResolver {
         public Fixed {
             Objects.requireNonNull(destination, "destination");
@@ -42,12 +46,14 @@ public sealed interface DestinationResolver
         }
     }
 
-    /** Явная карта eventType → destination с fallback-значением. */
+    /**
+     * Явная карта eventType → destination с fallback-значением.
+     */
     record ByEventType(Map<String, String> mapping, String fallback)
             implements DestinationResolver {
 
         public ByEventType {
-            mapping  = Map.copyOf(Objects.requireNonNull(mapping, "mapping"));
+            mapping = Map.copyOf(Objects.requireNonNull(mapping, "mapping"));
             Objects.requireNonNull(fallback, "fallback");
         }
 
@@ -57,7 +63,9 @@ public sealed interface DestinationResolver
         }
     }
 
-    /** Первый resolver, вернувший непустое значение, выигрывает. */
+    /**
+     * Первый resolver, вернувший непустое значение, выигрывает.
+     */
     record Chain(List<DestinationResolver> delegates) implements DestinationResolver {
         public Chain {
             delegates = List.copyOf(Objects.requireNonNull(delegates, "delegates"));

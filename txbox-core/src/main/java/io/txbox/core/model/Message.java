@@ -13,12 +13,18 @@ import java.util.UUID;
 public sealed interface Message permits OutboxMessage, InboxMessage {
 
     UUID messageId();
+
     String eventType();
+
     String payload();
+
     SequencedMap<String, String> headers();
+
     Instant timestamp();
 
-    /** Удобный хелпер: получить заголовок по ключу (null если отсутствует). */
+    /**
+     * Удобный хелпер: получить заголовок по ключу (null если отсутствует).
+     */
     default String header(String key) {
         return headers().get(key);
     }

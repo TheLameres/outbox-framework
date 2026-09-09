@@ -58,12 +58,19 @@ public abstract class AbstractMessageEntity {
     @Column(name = "last_error", length = 2000)
     protected String lastError;
 
-    /** Оптимистичная блокировка — защита от гонки поллера и ручного requeue. */
+    /**
+     * Оптимистичная блокировка — защита от гонки поллера и ручного requeue.
+     */
     @Version
     @Column(name = "lock_version", nullable = false)
     protected long lockVersion;
 
     // ── доменные переходы (используются в обоих наследниках) ─────────────────
+
+    protected static String truncate(String value, int max) {
+        if (value == null) return null;
+        return value.length() <= max ? value : value.substring(0, max - 3) + "...";
+    }
 
     public void markProcessed() {
         this.status = MessageStatus.PROCESSED;
@@ -77,13 +84,13 @@ public abstract class AbstractMessageEntity {
         this.processedAt = Instant.now();
     }
 
+    // ── helpers ───────────────────────────────────────────────────────────────
+
     public void markSkipped(String reason) {
         this.status = MessageStatus.SKIPPED;
         this.lastError = truncate(reason, 2000);
         this.processedAt = Instant.now();
     }
-
-    // ── helpers ───────────────────────────────────────────────────────────────
 
     @Override
     public boolean equals(Object obj) {
@@ -96,10 +103,5 @@ public abstract class AbstractMessageEntity {
     public int hashCode() {
         // стабильный hashCode даже до persist
         return messageId == null ? System.identityHashCode(this) : messageId.hashCode();
-    }
-
-    protected static String truncate(String value, int max) {
-        if (value == null) return null;
-        return value.length() <= max ? value : value.substring(0, max - 3) + "...";
     }
 }

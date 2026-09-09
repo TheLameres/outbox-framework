@@ -52,11 +52,15 @@ public class OutboxEventEntity {
     @ToString.Include
     private String eventType;
 
-    /** Payload не входит в toString: может быть на мегабайты. */
+    /**
+     * Payload не входит в toString: может быть на мегабайты.
+     */
     @Column(columnDefinition = "text", nullable = false, updatable = false)
     private String payload;
 
-    /** Hibernate 6.2+ маппит Map в jsonb нативно — hypersistence-utils не нужен. */
+    /**
+     * Hibernate 6.2+ маппит Map в jsonb нативно — hypersistence-utils не нужен.
+     */
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(nullable = false, columnDefinition = "jsonb")
     private Map<String, String> headers = new LinkedHashMap<>();
@@ -82,7 +86,9 @@ public class OutboxEventEntity {
     @Column(name = "processed_at")
     private Instant processedAt;
 
-    /** Оптимистичная блокировка — защита от гонки поллера и ручного requeue из админки. */
+    /**
+     * Оптимистичная блокировка — защита от гонки поллера и ручного requeue из админки.
+     */
     @Version
     @Column(nullable = false)
     private long lockVersion;
@@ -103,13 +109,20 @@ public class OutboxEventEntity {
         return entity;
     }
 
+    private static String truncate(String value) {
+        if (value == null) {
+            return null;
+        }
+        return value.length() <= 1000 ? value : value.substring(0, 997) + "...";
+    }
+
+    // ---------- доменные переходы вместо анемичных сеттеров ----------
+
     public OutboxMessage toMessage() {
         SequencedMap<String, String> hdrs = new LinkedHashMap<>(headers);
         return new OutboxMessage(
                 id, aggregateType, aggregateId, eventType, payload, hdrs, createdAt, attempt);
     }
-
-    // ---------- доменные переходы вместо анемичных сеттеров ----------
 
     public void claim() {
         this.status = OutboxStatus.IN_FLIGHT;
@@ -139,12 +152,5 @@ public class OutboxEventEntity {
         this.attempt = 0;
         this.lastError = null;
         this.claimedAt = null;
-    }
-
-    private static String truncate(String value) {
-        if (value == null) {
-            return null;
-        }
-        return value.length() <= 1000 ? value : value.substring(0, 997) + "...";
     }
 }

@@ -1,6 +1,8 @@
 package com.company.outbox.core;
 
-/** Контракт брокера. Реализации: Kafka, RabbitMQ, SNS, HTTP-webhook. */
+/**
+ * Контракт брокера. Реализации: Kafka, RabbitMQ, SNS, HTTP-webhook.
+ */
 @FunctionalInterface
 public interface OutboxPublisher {
 

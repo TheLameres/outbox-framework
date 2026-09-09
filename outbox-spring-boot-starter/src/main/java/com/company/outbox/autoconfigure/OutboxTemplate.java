@@ -22,12 +22,16 @@ public class OutboxTemplate {
     private final OutboxStore store;
     private final ObjectMapper objectMapper;
 
-    /** Публикация доменного события. Обязательно внутри активной транзакции. */
+    /**
+     * Публикация доменного события. Обязательно внутри активной транзакции.
+     */
     public void publish(DomainEvent event, String aggregateType, String aggregateId) {
         store.save(toMessage(event, aggregateType, aggregateId));
     }
 
-    /** Несколько событий одной транзакции — одной batch-вставкой. */
+    /**
+     * Несколько событий одной транзакции — одной batch-вставкой.
+     */
     public void publishAll(List<? extends DomainEvent> events,
                            String aggregateType,
                            String aggregateId) {
@@ -36,7 +40,9 @@ public class OutboxTemplate {
                 .toList());
     }
 
-    /** Полный контроль над маршрутизацией и заголовками. */
+    /**
+     * Полный контроль над маршрутизацией и заголовками.
+     */
     public <E extends DomainEvent> void publish(E event, OutboxMessageConverter<E> converter) {
         store.save(converter.convert(event));
     }

@@ -5,125 +5,140 @@ import io.txbox.consumer.model.InboundEventContext;
 import io.txbox.consumer.outcome.ProcessingOutcome;
 import io.txbox.consumer.store.InboxStore;
 import io.txbox.core.model.InboxMessage;
+import io.txbox.kafka.header.TxBoxHeaders;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
-import org.springframework.kafka.support.KafkaHeaders;
-import org.springframework.messaging.handler.annotation.Header;
-import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.SequencedMap;
+import java.util.UUID;
 
 /**
  * Kafka-слушатель входящих событий.
- * Цикл обработки:
- * 1. Получить сообщение из Kafka (deserialize по type header)
- * 2. Проверить дедупликацию (partition:offset)
- * 3. Найти и вызвать подходящий handler-метод (@InboxEventHandler)
- * 4. Применить исход (commit/NACK, обновить inbox status)
  *
- * <p>Все операции В ОДНОЙ TX: save inbox record + handler exec + mark status
- * → либо всё успешно, либо всё откатывается.
+ * <p>Зависит только от txbox-consumer-api, txbox-consumer-jpa, txbox-kafka.
+ * Не зависит от txbox-consumer-starter — конфигурация приходит через
+ * property-placeholders в @KafkaListener, containerFactory задаётся снаружи.
+ *
+ * <p>Цикл обработки (одна TX):
+ * <ol>
+ *   <li>Дедупликация по (partition, offset)</li>
+ *   <li>Сборка InboxMessage из ConsumerRecord через TxBoxHeaders</li>
+ *   <li>save → dispatch → applyOutcome</li>
+ *   <li>ack только при Success / Fatal / Skipped; Retryable — без ack</li>
+ * </ol>
  */
 @Slf4j
-@Component
 @RequiredArgsConstructor
 public class InboxKafkaListener {
 
     private final InboxStore store;
     private final InboxEventDispatcher dispatcher;
-    private final InboxProperties properties;
 
-    /**
-     * Основной Kafka listener.
-     * Обработка в TX: если произойдёт исключение — откатнётся и консьюмер NACK'нет сообщение.
-     */
+    private static UUID parseUUID(String value, int partition, long offset) {
+        if (value != null && !value.isBlank()) {
+            try {
+                return UUID.fromString(value);
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+        return UUID.nameUUIDFromBytes(
+                (partition + ":" + offset).getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static Instant parseInstant(String value) {
+        if (value != null && !value.isBlank()) {
+            try {
+                return Instant.parse(value);
+            } catch (Exception ignored) {
+            }
+        }
+        return Instant.now();
+    }
+
+    // ── helpers ───────────────────────────────────────────────────────────────
+
     @Transactional
     @KafkaListener(
             topics = "${txbox.consumer.kafka.topic}",
             groupId = "${txbox.consumer.kafka.group-id}",
             containerFactory = "inboxListenerContainerFactory"
     )
-    public void listen(
-            @Payload(required = false) String rawPayload,
-            @Header(name = KafkaHeaders.RECEIVED_PARTITION) int partition,
-            @Header(name = KafkaHeaders.OFFSET) long offset,
-            @Header(name = "txbox-message-id") UUID messageId,
-            @Header(name = "txbox-aggregate-type") String source,
-            @Header(name = "txbox-aggregate-id") String sourceId,
-            @Header(name = "txbox-event-type") String eventType,
-            @Header(name = KafkaHeaders.RECEIVED_TIMESTAMP) long timestamp,
-            Map<String, Object> headers,
-            Acknowledgment ack
-    ) {
+    public void listen(ConsumerRecord<String, String> record, Acknowledgment ack) {
+        int partition = record.partition();
+        long offset = record.offset();
+
         try {
-            // Дедупликация: уже видели это сообщение?
+            // 1. Дедупликация
             if (store.findByKafkaPosition(partition, offset).isPresent()) {
                 log.debug("Inbox duplicate skipped: partition={}, offset={}", partition, offset);
                 ack.acknowledge();
                 return;
             }
 
-            // Создаём InboxMessage и контекст
-            SequencedMap<String, String> contextHeaders = new LinkedHashMap<>();
-            headers.forEach((k, v) -> contextHeaders.put(k, String.valueOf(v)));
+            // 2. Извлекаем заголовки
+            SequencedMap<String, String> headers = new LinkedHashMap<>();
+            record.headers().forEach(h ->
+                    headers.put(h.key(), new String(h.value(), StandardCharsets.UTF_8)));
 
-            Instant receivedAt = Instant.ofEpochMilli(timestamp);
+            // 3. Читаем txbox-метаданные через TxBoxHeaders-константы
+            UUID messageId = parseUUID(headers.get(TxBoxHeaders.MESSAGE_ID), partition, offset);
+            String source = headers.getOrDefault(TxBoxHeaders.AGGREGATE_TYPE, record.topic());
+            String sourceId = record.key() != null ? record.key() : "";
+            String eventType = headers.getOrDefault(TxBoxHeaders.EVENT_TYPE, "Unknown");
+            Instant occurredAt = parseInstant(headers.get(TxBoxHeaders.OCCURRED_AT));
+            Instant receivedAt = Instant.ofEpochMilli(record.timestamp());
+
+            // 4. Собираем InboxMessage
             InboxMessage message = new InboxMessage(
-                    messageId, source, sourceId, eventType, rawPayload, contextHeaders,
-                    receivedAt, receivedAt, partition, offset
-            );
+                    messageId, source, sourceId, eventType,
+                    record.value(), headers,
+                    occurredAt, receivedAt,
+                    partition, offset);
 
             InboundEventContext context = new InboundEventContext(
-                    messageId, source, sourceId, eventType, contextHeaders,
-                    receivedAt, receivedAt
-            );
+                    messageId, source, sourceId, eventType, headers,
+                    occurredAt, receivedAt);
 
-            // Сохраняем в inbox как RECEIVED (в той же TX что ниже)
+            // 5. Сохраняем как RECEIVED — в той же TX что и handler
             store.save(message);
 
-            // Диспетчеризируем к handler-у
+            // 6. Диспетчеризируем
             ProcessingOutcome outcome = dispatcher.dispatch(message, context);
 
-            // Применяем исход
-            applyOutcome(outcome);
-
-            // Commit offset
-            ack.acknowledge();
+            // 7. Применяем исход
+            applyOutcome(outcome, ack);
 
         } catch (Exception e) {
-            // Исключение вне handler'а — это infrastructure failure
-            // NACK и retry позже
             log.error("Inbox processing failed: partition={}, offset={}", partition, offset, e);
-            throw e;  // Spring Kafka NACK'нет и перезапустит консьюмер
+            throw e; // Spring Kafka NACK и retry
         }
     }
 
-    /**
-     * Применяет исход обработки события к inbox-хранилищу.
-     * Используется классификатор для преобразования исключений.
-     */
-    private void applyOutcome(ProcessingOutcome outcome) {
+    private void applyOutcome(ProcessingOutcome outcome, Acknowledgment ack) {
         switch (outcome) {
-            case ProcessingOutcome.Success s ->
-                    store.markProcessed(s.messageId());
-
-            case ProcessingOutcome.Retryable r ->
-                    log.warn("Event retryable: {} - {}", r.messageId(), r.reason());
-                    // Оставляем RECEIVED, не обновляем — retry позже через scheduled retry job
-
+            case ProcessingOutcome.Success s -> {
+                store.markProcessed(s.messageId());
+                ack.acknowledge();
+            }
             case ProcessingOutcome.Fatal f -> {
                 store.markFailed(f.messageId(), f.reason());
-                log.error("Event fatal: {} - {}", f.messageId(), f.reason(), f.cause());
-                // Отправить в DLQ вызывает producer в starter-конфиге
+                log.error("Event fatal: messageId={}, reason={}", f.messageId(), f.reason(), f.cause());
+                ack.acknowledge(); // commit offset — DLQ через error handler в starter
             }
-
-            case ProcessingOutcome.Skipped sk ->
-                    store.markSkipped(sk.messageId(), sk.reason());
+            case ProcessingOutcome.Skipped sk -> {
+                store.markSkipped(sk.messageId(), sk.reason());
+                ack.acknowledge();
+            }
+            case ProcessingOutcome.Retryable r ->
+                // Без ack — Spring Kafka NACK и повторит
+                    log.warn("Event retryable: messageId={}, reason={}", r.messageId(), r.reason());
         }
     }
 }

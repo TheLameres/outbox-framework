@@ -2,7 +2,6 @@ package io.txbox.producer.starter;
 
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.txbox.core.model.MessageStatus;
 import io.txbox.producer.jpa.store.JpaOutboxStore;
 import lombok.extern.slf4j.Slf4j;
 

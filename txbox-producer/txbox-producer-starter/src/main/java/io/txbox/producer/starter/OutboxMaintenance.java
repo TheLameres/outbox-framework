@@ -1,7 +1,6 @@
 package io.txbox.producer.starter;
 
 import io.txbox.producer.jpa.store.JpaOutboxStore;
-import io.txbox.producer.api.OutboxStore;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;

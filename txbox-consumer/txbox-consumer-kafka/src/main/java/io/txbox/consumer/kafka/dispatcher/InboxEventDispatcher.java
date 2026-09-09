@@ -82,7 +82,7 @@ public class InboxEventDispatcher {
         List<HandlerMethod> handlers = findHandlers(message.source(), message.eventType());
 
         if (handlers.isEmpty()) {
-            log.warn("No handlers found for source={}, eventType={}", 
+            log.warn("No handlers found for source={}, eventType={}",
                     message.source(), message.eventType());
             return new ProcessingOutcome.Skipped(message.messageId(), "no handlers registered");
         }
@@ -119,7 +119,7 @@ public class InboxEventDispatcher {
                 }
 
                 // Если Retryable — логируем, но продолжаем цепь
-                log.warn("Handler retryable error: messageId={}, handler={}", 
+                log.warn("Handler retryable error: messageId={}, handler={}",
                         message.messageId(), handler.method.getName(), e);
             }
         }

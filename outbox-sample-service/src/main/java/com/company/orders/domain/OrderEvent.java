@@ -35,11 +35,14 @@ public sealed interface OrderEvent extends DomainEvent {
     }
 
     record Paid(UUID orderId, BigDecimal amount, String paymentId, Instant occurredAt)
-            implements OrderEvent {}
+            implements OrderEvent {
+    }
 
     record Shipped(UUID orderId, String trackingNumber, Instant occurredAt)
-            implements OrderEvent {}
+            implements OrderEvent {
+    }
 
     record Cancelled(UUID orderId, String reason, boolean refundRequired, Instant occurredAt)
-            implements OrderEvent {}
+            implements OrderEvent {
+    }
 }

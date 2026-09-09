@@ -17,7 +17,9 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final OutboxTemplate outbox;
 
-    /** Бизнес-код видит один метод. Ни поллера, ни таблицы, ни Kafka. */
+    /**
+     * Бизнес-код видит один метод. Ни поллера, ни таблицы, ни Kafka.
+     */
     @Transactional
     public UUID createOrder(UUID customerId, BigDecimal total) {
         var order = OrderEntity.create(customerId, total);
@@ -31,7 +33,9 @@ public class OrderService {
         return order.getId();
     }
 
-    /** Несколько событий одной транзакции — одна batch-вставка в outbox. */
+    /**
+     * Несколько событий одной транзакции — одна batch-вставка в outbox.
+     */
     @Transactional
     public void completeOrder(UUID orderId, String paymentId, String tracking) {
         var order = orderRepository.findById(orderId).orElseThrow();
@@ -44,7 +48,9 @@ public class OrderService {
         outbox.publishAll(events, "Order", orderId.toString());
     }
 
-    /** Кастомная маршрутизация: конвертер как лямбда — интерфейс функциональный. */
+    /**
+     * Кастомная маршрутизация: конвертер как лямбда — интерфейс функциональный.
+     */
     @Transactional
     public void cancelOrder(UUID orderId, String reason) {
         var order = orderRepository.findById(orderId).orElseThrow();

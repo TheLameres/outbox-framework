@@ -1,13 +1,13 @@
 package io.txbox.producer.starter;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.txbox.core.routing.DestinationResolver;
 import io.txbox.producer.api.OutboxPublisher;
 import io.txbox.producer.api.OutboxStore;
 import io.txbox.producer.jpa.repository.OutboxJpaRepository;
 import io.txbox.producer.jpa.store.JpaOutboxStore;
 import io.txbox.producer.kafka.KafkaOutboxPublisher;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -44,6 +44,22 @@ public class OutboxAutoConfiguration {
 
     // ── Kafka ─────────────────────────────────────────────────────────────────
 
+    @Bean
+    OutboxHealthIndicator outboxHealthIndicator(JpaOutboxStore store) {
+        return new OutboxHealthIndicator(store);
+    }
+
+    // ── поллер ───────────────────────────────────────────────────────────────
+
+    @Bean
+    @ConditionalOnClass(MeterRegistry.class)
+    OutboxMetrics outboxMetrics(JpaOutboxStore store,
+                                ObjectProvider<MeterRegistry> meters) {
+        return new OutboxMetrics(store, meters.getIfAvailable(SimpleMeterRegistry::new));
+    }
+
+    // ── health ────────────────────────────────────────────────────────────────
+
     @Configuration(proxyBeanMethods = false)
     @ConditionalOnClass(KafkaTemplate.class)
     static class KafkaConfiguration {
@@ -53,8 +69,8 @@ public class OutboxAutoConfiguration {
         DestinationResolver outboxDestinationResolver(OutboxProperties properties) {
             var kafka = properties.kafka();
             return switch (kafka.routing()) {
-                case SUFFIX       -> new DestinationResolver.BySuffix(kafka.topicSuffix());
-                case FIXED        -> new DestinationResolver.Fixed(kafka.fixedTopic());
+                case SUFFIX -> new DestinationResolver.BySuffix(kafka.topicSuffix());
+                case FIXED -> new DestinationResolver.Fixed(kafka.fixedTopic());
                 case BY_EVENT_TYPE -> new DestinationResolver.ByEventType(
                         kafka.topicByEventType(), kafka.fixedTopic());
             };
@@ -70,7 +86,7 @@ public class OutboxAutoConfiguration {
         }
     }
 
-    // ── поллер ───────────────────────────────────────────────────────────────
+    // ── metrics ───────────────────────────────────────────────────────────────
 
     @Configuration(proxyBeanMethods = false)
     @EnableScheduling
@@ -92,21 +108,5 @@ public class OutboxAutoConfiguration {
                                             OutboxProperties properties) {
             return new OutboxMaintenance(store, properties);
         }
-    }
-
-    // ── health ────────────────────────────────────────────────────────────────
-
-    @Bean
-    OutboxHealthIndicator outboxHealthIndicator(JpaOutboxStore store) {
-        return new OutboxHealthIndicator(store);
-    }
-
-    // ── metrics ───────────────────────────────────────────────────────────────
-
-    @Bean
-    @ConditionalOnClass(MeterRegistry.class)
-    OutboxMetrics outboxMetrics(JpaOutboxStore store,
-                                ObjectProvider<MeterRegistry> meters) {
-        return new OutboxMetrics(store, meters.getIfAvailable(SimpleMeterRegistry::new));
     }
 }

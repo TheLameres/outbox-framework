@@ -18,10 +18,14 @@ import java.util.UUID;
  */
 public interface OutboxStore {
 
-    /** Сохраняет сообщение в ТЕКУЩЕЙ транзакции бизнес-операции. */
+    /**
+     * Сохраняет сообщение в ТЕКУЩЕЙ транзакции бизнес-операции.
+     */
     void save(OutboxMessage message);
 
-    /** Batch-вставка — несколько событий в одной TX. */
+    /**
+     * Batch-вставка — несколько событий в одной TX.
+     */
     default void saveAll(List<OutboxMessage> messages) {
         messages.forEach(this::save);
     }
@@ -39,12 +43,18 @@ public interface OutboxStore {
      */
     void applyOutcomes(List<PublishOutcome> outcomes, int maxRetries);
 
-    /** Очищает PROCESSED/FAILED/SKIPPED старше retention. */
+    /**
+     * Очищает PROCESSED/FAILED/SKIPPED старше retention.
+     */
     int purgeProcessed(java.time.Duration retention, int limit);
 
-    /** Возвращает IN_FLIGHT записи без обновлений дольше timeout обратно в PENDING. */
+    /**
+     * Возвращает IN_FLIGHT записи без обновлений дольше timeout обратно в PENDING.
+     */
     int reclaimStale(java.time.Duration timeout);
 
-    /** Ручной повтор FAILED-сообщения (для DLQ-эндпоинта). */
+    /**
+     * Ручной повтор FAILED-сообщения (для DLQ-эндпоинта).
+     */
     void requeue(UUID messageId);
 }

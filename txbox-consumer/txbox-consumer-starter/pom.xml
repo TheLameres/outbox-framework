@@ -1,34 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
-                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>io.txbox</groupId>
+        <groupId>thelameres</groupId>
         <artifactId>txbox-consumer</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>0.0.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>txbox-consumer-starter</artifactId>
     <packaging>jar</packaging>
 
     <name>TxBox Consumer Starter</name>
-    <description>Spring Boot auto-configuration for TxBox Inbox</description>
+    <description>Spring Boot autoconfiguration for TxBox Inbox</description>
 
     <dependencies>
         <!-- txbox modules -->
         <dependency>
-            <groupId>io.txbox</groupId>
+            <groupId>thelameres</groupId>
             <artifactId>txbox-consumer-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.txbox</groupId>
+            <groupId>thelameres</groupId>
             <artifactId>txbox-consumer-jpa</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.txbox</groupId>
+            <groupId>thelameres</groupId>
             <artifactId>txbox-consumer-kafka</artifactId>
         </dependency>
 

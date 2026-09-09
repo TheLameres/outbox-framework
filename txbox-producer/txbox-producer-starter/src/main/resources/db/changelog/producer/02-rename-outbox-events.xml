@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
-        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd">
 
@@ -12,7 +12,9 @@
     <changeSet id="producer-002-rename-outbox-events" author="txbox">
         <preConditions onFail="MARK_RAN">
             <tableExists tableName="outbox_events"/>
-            <not><tableExists tableName="txbox_outbox_events"/></not>
+            <not>
+                <tableExists tableName="txbox_outbox_events"/>
+            </not>
         </preConditions>
 
         <renameTable oldTableName="outbox_events"
@@ -21,15 +23,15 @@
         <!-- Старый PK именовался по-другому — переименовываем индексы -->
         <sql>
             ALTER INDEX IF EXISTS idx_outbox_claimable
-                RENAME TO idx_txbox_outbox_claimable;
+            RENAME TO idx_txbox_outbox_claimable;
         </sql>
         <sql>
             ALTER INDEX IF EXISTS idx_outbox_aggregate
-                RENAME TO idx_txbox_outbox_aggregate;
+            RENAME TO idx_txbox_outbox_aggregate;
         </sql>
         <sql>
             ALTER INDEX IF EXISTS idx_outbox_purge
-                RENAME TO idx_txbox_outbox_purge;
+            RENAME TO idx_txbox_outbox_purge;
         </sql>
 
         <!-- Переименовываем колонку id → message_id если нужно -->

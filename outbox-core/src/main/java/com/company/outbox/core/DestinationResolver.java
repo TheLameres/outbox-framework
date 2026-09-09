@@ -10,7 +10,9 @@ public sealed interface DestinationResolver {
 
     String resolve(OutboxMessage message);
 
-    /** {@code Order} -> {@code order-events} */
+    /**
+     * {@code Order} -> {@code order-events}
+     */
     record BySuffix(String suffix) implements DestinationResolver {
         public BySuffix {
             java.util.Objects.requireNonNull(suffix);
@@ -22,7 +24,9 @@ public sealed interface DestinationResolver {
         }
     }
 
-    /** Все события в один топик. */
+    /**
+     * Все события в один топик.
+     */
     record Fixed(String destination) implements DestinationResolver {
         @Override
         public String resolve(OutboxMessage message) {
@@ -30,7 +34,9 @@ public sealed interface DestinationResolver {
         }
     }
 
-    /** Явная карта eventType -> destination с fallback. */
+    /**
+     * Явная карта eventType -> destination с fallback.
+     */
     record ByEventType(Map<String, String> mapping, String fallback)
             implements DestinationResolver {
 
@@ -44,7 +50,9 @@ public sealed interface DestinationResolver {
         }
     }
 
-    /** Первый resolver, вернувший непустое значение. */
+    /**
+     * Первый resolver, вернувший непустое значение.
+     */
     record Chain(java.util.List<DestinationResolver> delegates)
             implements DestinationResolver {
 

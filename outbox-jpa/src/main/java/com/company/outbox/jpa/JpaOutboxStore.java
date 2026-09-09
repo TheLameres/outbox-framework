@@ -101,7 +101,9 @@ public class JpaOutboxStore implements OutboxStore {
                 .requeue();
     }
 
-    /** Возврат зависших IN_FLIGHT — вызывается отдельным расписанием. */
+    /**
+     * Возврат зависших IN_FLIGHT — вызывается отдельным расписанием.
+     */
     @Transactional
     public int reclaimStale(Duration timeout) {
         int reclaimed = repository.reclaimStale(Instant.now().minus(timeout));

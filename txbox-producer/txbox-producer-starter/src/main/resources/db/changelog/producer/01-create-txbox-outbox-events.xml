@@ -1,15 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
-        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd">
 
     <changeSet id="producer-001-create-txbox-outbox-events" author="txbox">
         <preConditions onFail="MARK_RAN">
             <!-- создаём только если таблица ещё не существует -->
-            <not><tableExists tableName="txbox_outbox_events"/></not>
-            <not><tableExists tableName="outbox_events"/></not>
+            <not>
+                <tableExists tableName="txbox_outbox_events"/>
+            </not>
+            <not>
+                <tableExists tableName="outbox_events"/>
+            </not>
         </preConditions>
 
         <createTable tableName="txbox_outbox_events">

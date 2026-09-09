@@ -55,7 +55,9 @@ public abstract class AbstractJpaMessageStore<
 
     // ── абстрактные методы для конкретных наследников ──────────────────────
 
-    /** Конвертирует JPA-сущность в доменный объект. */
+    /**
+     * Конвертирует JPA-сущность в доменный объект.
+     */
     protected abstract T toMessage(E entity);
 
     /**

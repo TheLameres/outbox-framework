@@ -5,7 +5,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 
-/** Фоновые задачи обслуживания: возврат зависших и очистка обработанных. */
+/**
+ * Фоновые задачи обслуживания: возврат зависших и очистка обработанных.
+ */
 @Slf4j
 @RequiredArgsConstructor
 public class OutboxMaintenance {

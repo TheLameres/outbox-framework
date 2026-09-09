@@ -45,6 +45,13 @@ public class OutboxAutoConfiguration {
 
     // ---------- Kafka ----------
 
+    @Bean
+    OutboxHealthIndicator outboxHealthIndicator(OutboxJpaRepository repository) {
+        return new OutboxHealthIndicator(repository);
+    }
+
+    // ---------- поллер ----------
+
     @Configuration(proxyBeanMethods = false)
     @ConditionalOnClass(KafkaTemplate.class)
     static class KafkaConfiguration {
@@ -70,7 +77,7 @@ public class OutboxAutoConfiguration {
         }
     }
 
-    // ---------- поллер ----------
+    // ---------- health ----------
 
     @Configuration(proxyBeanMethods = false)
     @EnableScheduling
@@ -93,12 +100,5 @@ public class OutboxAutoConfiguration {
         OutboxMaintenance outboxMaintenance(JpaOutboxStore store, OutboxProperties properties) {
             return new OutboxMaintenance(store, properties);
         }
-    }
-
-    // ---------- health ----------
-
-    @Bean
-    OutboxHealthIndicator outboxHealthIndicator(OutboxJpaRepository repository) {
-        return new OutboxHealthIndicator(repository);
     }
 }

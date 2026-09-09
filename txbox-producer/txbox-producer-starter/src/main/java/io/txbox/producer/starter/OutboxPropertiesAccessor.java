@@ -18,9 +18,23 @@ public final class OutboxPropertiesAccessor {
         this.props = props;
     }
 
-    public Polling polling()         { return props.polling(); }
-    public Maintenance maintenance() { return props.maintenance(); }
-    public OutboxProperties.Retry retry() { return props.retry(); }
-    public OutboxProperties.Kafka kafka() { return props.kafka(); }
-    public boolean enabled()         { return props.enabled(); }
+    public Polling polling() {
+        return props.polling();
+    }
+
+    public Maintenance maintenance() {
+        return props.maintenance();
+    }
+
+    public OutboxProperties.Retry retry() {
+        return props.retry();
+    }
+
+    public OutboxProperties.Kafka kafka() {
+        return props.kafka();
+    }
+
+    public boolean enabled() {
+        return props.enabled();
+    }
 }

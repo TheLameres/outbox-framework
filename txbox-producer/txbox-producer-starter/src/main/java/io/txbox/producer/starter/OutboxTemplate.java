@@ -31,12 +31,16 @@ public class OutboxTemplate {
     private final OutboxStore store;
     private final ObjectMapper objectMapper;
 
-    /** Публикует одно событие. eventType берётся из DomainEvent.eventType(). */
+    /**
+     * Публикует одно событие. eventType берётся из DomainEvent.eventType().
+     */
     public void publish(DomainEvent event, String aggregateType, String aggregateId) {
         store.save(toMessage(event, aggregateType, aggregateId));
     }
 
-    /** Batch-публикация нескольких событий в одной TX. */
+    /**
+     * Batch-публикация нескольких событий в одной TX.
+     */
     public void publishAll(List<? extends DomainEvent> events,
                            String aggregateType, String aggregateId) {
         store.saveAll(events.stream()
@@ -44,7 +48,9 @@ public class OutboxTemplate {
                 .toList());
     }
 
-    /** Полный контроль через converter — кастомные заголовки, routing. */
+    /**
+     * Полный контроль через converter — кастомные заголовки, routing.
+     */
     public void publish(DomainEvent event, Function<DomainEvent, OutboxMessage> converter) {
         store.save(converter.apply(event));
     }

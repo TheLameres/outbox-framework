@@ -6,7 +6,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
-/** /actuator/health/outbox — DOWN, если накопились FAILED-сообщения. */
+/**
+ * /actuator/health/outbox — DOWN, если накопились FAILED-сообщения.
+ */
 @RequiredArgsConstructor
 public class OutboxHealthIndicator implements HealthIndicator {
 

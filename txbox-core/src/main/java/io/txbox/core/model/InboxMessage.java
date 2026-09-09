@@ -28,7 +28,7 @@ public record InboxMessage(
         Objects.requireNonNull(messageId, "messageId");
         Objects.requireNonNull(receivedAt, "receivedAt");
         eventType = requireText(eventType, "eventType");
-        payload   = requireText(payload,   "payload");
+        payload = requireText(payload, "payload");
         headers = headers == null
                 ? Collections.unmodifiableSequencedMap(new LinkedHashMap<>())
                 : Collections.unmodifiableSequencedMap(new LinkedHashMap<>(headers));

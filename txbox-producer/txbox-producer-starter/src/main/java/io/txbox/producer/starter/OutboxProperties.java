@@ -1,6 +1,5 @@
 package io.txbox.producer.starter;
 
-import io.txbox.core.routing.DestinationResolver;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -31,19 +30,22 @@ public record OutboxProperties(
             @DefaultValue("true") boolean virtualThreads,
             @DefaultValue("64") @Min(1) int concurrency,
             @DefaultValue("5m") Duration inFlightTimeout
-    ) {}
+    ) {
+    }
 
     public record Retry(
             @DefaultValue("5") @Min(1) int maxAttempts,
             @DefaultValue("10s") Duration sendTimeout
-    ) {}
+    ) {
+    }
 
     public record Maintenance(
             @DefaultValue("true") boolean enabled,
             @DefaultValue("7d") Duration retention,
             @DefaultValue("1h") Duration interval,
             @DefaultValue("10000") int batchSize
-    ) {}
+    ) {
+    }
 
     public record Kafka(
             @DefaultValue("SUFFIX") Routing routing,
@@ -51,6 +53,6 @@ public record OutboxProperties(
             @DefaultValue("txbox-events") String fixedTopic,
             @DefaultValue Map<String, String> topicByEventType
     ) {
-        public enum Routing { SUFFIX, FIXED, BY_EVENT_TYPE }
+        public enum Routing {SUFFIX, FIXED, BY_EVENT_TYPE}
     }
 }

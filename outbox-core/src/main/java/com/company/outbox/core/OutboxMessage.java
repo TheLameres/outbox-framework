@@ -41,7 +41,9 @@ public record OutboxMessage(
                 : new LinkedHashMap<>(headers);
     }
 
-    /** Фабрика для типового случая. */
+    /**
+     * Фабрика для типового случая.
+     */
     public static OutboxMessage of(String aggregateType,
                                    String aggregateId,
                                    String eventType,
@@ -58,7 +60,16 @@ public record OutboxMessage(
         );
     }
 
-    /** «Wither» вместо builder-а — иммутабельная копия с добавленным заголовком. */
+    private static String requireText(String value, String field) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(field + " must not be blank");
+        }
+        return value;
+    }
+
+    /**
+     * «Wither» вместо builder-а — иммутабельная копия с добавленным заголовком.
+     */
     public OutboxMessage withHeader(String key, String value) {
         SequencedMap<String, String> next = new LinkedHashMap<>(headers);
         next.putLast(key, value); // putLast — API SequencedMap из Java 21
@@ -78,21 +89,18 @@ public record OutboxMessage(
                 id, aggregateType, aggregateId, eventType, payload, headers, createdAt, attempt + 1);
     }
 
-    /** Возвращает неизменяемое представление заголовков для внешних потребителей. */
+    /**
+     * Возвращает неизменяемое представление заголовков для внешних потребителей.
+     */
     @Override
     public SequencedMap<String, String> headers() {
         return java.util.Collections.unmodifiableSequencedMap(headers);
     }
 
-    /** Возраст сообщения — основа метрики outbox lag. */
+    /**
+     * Возраст сообщения — основа метрики outbox lag.
+     */
     public java.time.Duration age() {
         return java.time.Duration.between(createdAt, Instant.now());
-    }
-
-    private static String requireText(String value, String field) {
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException(field + " must not be blank");
-        }
-        return value;
     }
 }

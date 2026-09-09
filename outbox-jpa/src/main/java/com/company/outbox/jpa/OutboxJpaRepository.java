@@ -28,7 +28,9 @@ public interface OutboxJpaRepository extends JpaRepository<OutboxEventEntity, UU
             """)
     List<OutboxEventEntity> claimPending(Limit limit);
 
-    /** Возврат «зависших» IN_FLIGHT после падения инстанса. */
+    /**
+     * Возврат «зависших» IN_FLIGHT после падения инстанса.
+     */
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
             update OutboxEventEntity e

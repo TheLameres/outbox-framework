@@ -25,8 +25,8 @@ public record OutboxMessage(
         Objects.requireNonNull(messageId, "messageId");
         Objects.requireNonNull(timestamp, "timestamp");
         aggregateType = requireText(aggregateType, "aggregateType");
-        aggregateId   = requireText(aggregateId,   "aggregateId");
-        eventType     = requireText(eventType,     "eventType");
+        aggregateId = requireText(aggregateId, "aggregateId");
+        eventType = requireText(eventType, "eventType");
         Objects.requireNonNull(payload, "payload");
         if (attempt < 0) throw new IllegalArgumentException("attempt must be >= 0, got " + attempt);
         headers = headers == null
@@ -45,6 +45,12 @@ public record OutboxMessage(
 
     // ── wither-методы (immutable copies) ─────────────────────────────────────
 
+    private static String requireText(String value, String field) {
+        if (value == null || value.isBlank())
+            throw new IllegalArgumentException(field + " must not be blank");
+        return value;
+    }
+
     public OutboxMessage withHeader(String key, String value) {
         SequencedMap<String, String> next = new LinkedHashMap<>(headers);
         next.putLast(key, value);
@@ -59,16 +65,10 @@ public record OutboxMessage(
                 eventType, payload, next, timestamp, attempt);
     }
 
+    // ── helpers ───────────────────────────────────────────────────────────────
+
     public OutboxMessage nextAttempt() {
         return new OutboxMessage(messageId, aggregateType, aggregateId,
                 eventType, payload, headers, timestamp, attempt + 1);
-    }
-
-    // ── helpers ───────────────────────────────────────────────────────────────
-
-    private static String requireText(String value, String field) {
-        if (value == null || value.isBlank())
-            throw new IllegalArgumentException(field + " must not be blank");
-        return value;
     }
 }

@@ -8,6 +8,7 @@ import io.txbox.consumer.store.InboxStore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.EnableKafka;
@@ -38,15 +39,15 @@ public class InboxAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public InboxEventDispatcher inboxEventDispatcher(InboxStore store) {
-        return new InboxEventDispatcher(store);
+    public InboxEventDispatcher inboxEventDispatcher(ApplicationContext context) {
+        return new InboxEventDispatcher(context);
     }
 
     @Bean
     @ConditionalOnMissingBean
     public InboxKafkaListener inboxKafkaListener(InboxStore store,
                                                  InboxEventDispatcher dispatcher) {
-        return new InboxKafkaListener(store, dispatcher, properties);
+        return new InboxKafkaListener(store, dispatcher);
     }
 
     /**

@@ -14,16 +14,24 @@ import java.util.UUID;
  */
 public interface MessageStore<T extends Message> {
 
-    /** Сохраняет сообщение (insert). */
+    /**
+     * Сохраняет сообщение (insert).
+     */
     void save(T message);
 
-    /** Возвращает true, если сообщение уже завершилось (PROCESSED / FAILED / SKIPPED). */
+    /**
+     * Возвращает true, если сообщение уже завершилось (PROCESSED / FAILED / SKIPPED).
+     */
     boolean wasProcessed(UUID messageId);
 
-    /** Находит сообщение по ID. */
+    /**
+     * Находит сообщение по ID.
+     */
     Optional<T> findById(UUID messageId);
 
-    /** Агрегированная статистика по очереди. */
+    /**
+     * Агрегированная статистика по очереди.
+     */
     MessageStats getStats();
 
     /**

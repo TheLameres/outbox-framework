@@ -21,7 +21,8 @@ import java.util.UUID;
  */
 public final class InboxMessageKafkaConverter {
 
-    private InboxMessageKafkaConverter() {}
+    private InboxMessageKafkaConverter() {
+    }
 
     public static InboxMessage convert(ConsumerRecord<String, String> record) {
         SequencedMap<String, String> headers = extractHeaders(record.headers());
@@ -38,7 +39,7 @@ public final class InboxMessageKafkaConverter {
                 .map(Instant::parse)
                 .orElse(Instant.now());
 
-        String source   = headers.getOrDefault(TxBoxHeaders.AGGREGATE_TYPE, record.topic());
+        String source = headers.getOrDefault(TxBoxHeaders.AGGREGATE_TYPE, record.topic());
         String sourceId = record.key() != null ? record.key() : "";
 
         return new InboxMessage(

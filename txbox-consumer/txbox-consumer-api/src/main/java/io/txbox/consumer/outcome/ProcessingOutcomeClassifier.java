@@ -44,8 +44,7 @@ public final class ProcessingOutcomeClassifier {
                     new ProcessingOutcome.Retryable(messageId, "processing timeout", e);
 
             // Validation / business logic — permanent failures
-            case IllegalArgumentException e ->
-                    new ProcessingOutcome.Fatal(messageId, "invalid: " + e.getMessage(), e);
+            case IllegalArgumentException e -> new ProcessingOutcome.Fatal(messageId, "invalid: " + e.getMessage(), e);
             case IllegalStateException e ->
                     new ProcessingOutcome.Fatal(messageId, "illegal state: " + e.getMessage(), e);
 

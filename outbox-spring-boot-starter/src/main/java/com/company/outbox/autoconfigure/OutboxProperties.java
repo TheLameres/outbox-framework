@@ -39,19 +39,22 @@ public record OutboxProperties(
             @DefaultValue("64") @Min(1) int concurrency,
             /** Через сколько вернуть зависшие IN_FLIGHT обратно в PENDING. */
             @DefaultValue("5m") Duration inFlightTimeout
-    ) {}
+    ) {
+    }
 
     public record Retry(
             @DefaultValue("5") @Min(1) int maxAttempts,
             @DefaultValue("PT10S") Duration sendTimeout
-    ) {}
+    ) {
+    }
 
     public record Cleanup(
             @DefaultValue("true") boolean enabled,
             @DefaultValue("7d") Duration retention,
             @DefaultValue("1h") Duration interval,
             @DefaultValue("10000") int batchSize
-    ) {}
+    ) {
+    }
 
     public record Kafka(
             /** Стратегия: SUFFIX | FIXED | BY_EVENT_TYPE */
@@ -60,6 +63,6 @@ public record OutboxProperties(
             @DefaultValue("outbox-events") String fixedTopic,
             @DefaultValue Map<String, String> topicByEventType
     ) {
-        public enum Routing { SUFFIX, FIXED, BY_EVENT_TYPE }
+        public enum Routing {SUFFIX, FIXED, BY_EVENT_TYPE}
     }
 }

@@ -17,7 +17,9 @@ public interface DomainEvent {
 
     Instant occurredAt();
 
-    /** Имя типа события по умолчанию = простое имя record-а. */
+    /**
+     * Имя типа события по умолчанию = простое имя record-а.
+     */
     default String eventType() {
         return getClass().getSimpleName();
     }

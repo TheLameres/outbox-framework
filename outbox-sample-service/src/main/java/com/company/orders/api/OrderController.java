@@ -17,13 +17,6 @@ public class OrderController {
 
     private final OrderService orderService;
 
-    /** DTO как record с валидацией — @Data/@Builder не нужны. */
-    public record CreateOrderRequest(
-            @NotNull UUID customerId,
-            @NotNull @Positive BigDecimal total) {}
-
-    public record CreateOrderResponse(UUID orderId) {}
-
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public CreateOrderResponse create(@RequestBody @jakarta.validation.Valid CreateOrderRequest request) {
@@ -36,5 +29,17 @@ public class OrderController {
         orderService.cancelOrder(orderId, request.reason());
     }
 
-    public record CancelRequest(@NotNull String reason) {}
+    /**
+     * DTO как record с валидацией — @Data/@Builder не нужны.
+     */
+    public record CreateOrderRequest(
+            @NotNull UUID customerId,
+            @NotNull @Positive BigDecimal total) {
+    }
+
+    public record CreateOrderResponse(UUID orderId) {
+    }
+
+    public record CancelRequest(@NotNull String reason) {
+    }
 }

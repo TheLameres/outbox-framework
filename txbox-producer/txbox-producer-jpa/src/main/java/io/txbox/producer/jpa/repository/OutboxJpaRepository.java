@@ -56,7 +56,9 @@ public interface OutboxJpaRepository extends JpaRepository<OutboxEventEntity, UU
             """)
     int purgeProcessed(@Param("before") Instant before, Limit limit);
 
-    /** Для health-check и метрик. */
+    /**
+     * Для health-check и метрик.
+     */
     long countByStatus(MessageStatus status);
 
     @Query("SELECT MIN(e.createdAt) FROM OutboxEventEntity e WHERE e.status = 'PENDING'")
