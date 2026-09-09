@@ -45,27 +45,4 @@ public sealed interface ProcessingOutcome permits
     record Skipped(UUID messageId, String reason)
             implements ProcessingOutcome {}
 
-    /**
-     * Классификация исключения: что-то типичное → Retryable/Fatal.
-     * Зеркально {@code PublishOutcome.classifyKafkaError} у producer.
-     */
-    static ProcessingOutcome fromThrowable(UUID messageId, Throwable t) {
-        if (t == null) return new Retryable(messageId, "unknown error", new Exception());
-        
-        return switch (t) {
-            // Spring Data/JPA transient errors
-            case org.springframework.dao.TransientDataAccessException e ->
-                    new Retryable(messageId, "transient DB error", e);
-            // Timeout
-            case java.util.concurrent.TimeoutException e ->
-                    new Retryable(messageId, "processing timeout", e);
-            // Validation / business logic
-            case IllegalArgumentException e ->
-                    new Fatal(messageId, "invalid: " + e.getMessage(), e);
-            case IllegalStateException e ->
-                    new Fatal(messageId, "illegal state: " + e.getMessage(), e);
-            // Default: retry
-            default -> new Retryable(messageId, t.getClass().getSimpleName(), t);
-        };
-    }
 }

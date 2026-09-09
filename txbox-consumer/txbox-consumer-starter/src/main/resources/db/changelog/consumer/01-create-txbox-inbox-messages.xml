@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd">
+
+    <changeSet id="consumer-001-create-txbox-inbox-messages" author="txbox">
+
+        <createTable tableName="txbox_inbox_messages">
+            <column name="message_id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="event_type" type="varchar(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="payload" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="headers" type="jsonb" defaultValueComputed="'{}'::jsonb">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="varchar(20)" defaultValue="RECEIVED">
+                <constraints nullable="false"/>
+            </column>
+            <column name="processed_at" type="timestamptz"/>
+            <column name="last_error" type="varchar(2000)"/>
+            <column name="lock_version" type="bigint" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <!-- Consumer-специфичные поля -->
+            <column name="source" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="source_id" type="varchar(255)"/>
+            <column name="received_at" type="timestamptz">
+                <constraints nullable="false"/>
+            </column>
+            <!-- partition_idx / offset_val — избегаем зарезервированных слов SQL -->
+            <column name="partition_idx" type="integer">
+                <constraints nullable="false"/>
+            </column>
+            <column name="offset_val" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Уникальный индекс дедупликации — главная защита от дублей -->
+        <addUniqueConstraint
+                tableName="txbox_inbox_messages"
+                columnNames="partition_idx, offset_val"
+                constraintName="uk_txbox_inbox_kafka_position"/>
+
+        <createIndex indexName="idx_txbox_inbox_status"
+                     tableName="txbox_inbox_messages">
+            <column name="status"/>
+            <column name="received_at"/>
+        </createIndex>
+
+        <createIndex indexName="idx_txbox_inbox_purge"
+                     tableName="txbox_inbox_messages">
+            <column name="processed_at"/>
+        </createIndex>
+
+        <!-- Partial indexes через raw SQL -->
+        <sql>
+            CREATE INDEX idx_txbox_inbox_active
+            ON txbox_inbox_messages (received_at)
+            WHERE status = 'RECEIVED';
+        </sql>
+
+        <rollback>
+            <sql>DROP INDEX IF EXISTS idx_txbox_inbox_active;</sql>
+            <dropIndex tableName="txbox_inbox_messages" indexName="idx_txbox_inbox_purge"/>
+            <dropIndex tableName="txbox_inbox_messages" indexName="idx_txbox_inbox_status"/>
+            <dropUniqueConstraint tableName="txbox_inbox_messages"
+                                  constraintName="uk_txbox_inbox_kafka_position"/>
+            <dropTable tableName="txbox_inbox_messages"/>
+        </rollback>
+
+    </changeSet>
+
+</databaseChangeLog>
