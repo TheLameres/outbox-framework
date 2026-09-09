@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
  * Health indicator для inbox.
  * Проверяет наличие зависших или упавших сообщений.
  */
-@Component("inboxHealth")
 @RequiredArgsConstructor
 public class InboxHealthIndicator implements HealthIndicator {
 

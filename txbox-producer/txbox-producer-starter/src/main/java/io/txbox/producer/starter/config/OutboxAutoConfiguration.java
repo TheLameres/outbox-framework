@@ -1,4 +1,4 @@
-package io.txbox.producer.starter;
+package io.txbox.producer.starter.config;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -8,11 +8,16 @@ import io.txbox.producer.api.OutboxStore;
 import io.txbox.producer.jpa.repository.OutboxJpaRepository;
 import io.txbox.producer.jpa.store.JpaOutboxStore;
 import io.txbox.producer.kafka.KafkaOutboxPublisher;
+import io.txbox.producer.starter.health.OutboxHealthIndicator;
+import io.txbox.producer.starter.maintenance.OutboxMaintenance;
+import io.txbox.producer.starter.metrics.OutboxMetrics;
+import io.txbox.producer.starter.polling.OutboxPoller;
+import io.txbox.producer.starter.polling.OutboxSchedulerManager;
+import io.txbox.producer.starter.template.OutboxTemplate;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.context.annotation.Bean;
@@ -47,7 +52,6 @@ public class OutboxAutoConfiguration {
         return new OutboxHealthIndicator(store);
     }
 
-
     @Bean
     @ConditionalOnMissingBean
     OutboxPoller outboxPoller(OutboxStore store,
@@ -78,7 +82,7 @@ public class OutboxAutoConfiguration {
         return new OutboxMetrics(store, meters.getIfAvailable(SimpleMeterRegistry::new));
     }
 
-    // ── health ────────────────────────────────────────────────────────────────
+    // ── Kafka ─────────────────────────────────────────────────────────────────
 
     @Configuration(proxyBeanMethods = false)
     @ConditionalOnClass(KafkaTemplate.class)
@@ -102,7 +106,9 @@ public class OutboxAutoConfiguration {
                                                   DestinationResolver resolver,
                                                   OutboxProperties properties) {
             return new KafkaOutboxPublisher(
-                    kafkaTemplate, resolver, properties.retry().sendTimeout());
+                    kafkaTemplate,
+                    resolver,
+                    properties.retry().sendTimeout());
         }
     }
 }

@@ -1,4 +1,4 @@
-package io.txbox.producer.starter;
+package io.txbox.producer.starter.config;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

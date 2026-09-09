@@ -1,11 +1,11 @@
-package io.txbox.producer.starter;
+package io.txbox.producer.starter.polling;
 
 import io.txbox.core.model.OutboxMessage;
 import io.txbox.producer.api.OutboxPublisher;
 import io.txbox.producer.api.OutboxStore;
 import io.txbox.producer.api.PublishOutcome;
+import io.txbox.producer.starter.config.OutboxProperties;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,7 +64,6 @@ public class OutboxPoller {
     }
 
     private List<PublishOutcome> publishConcurrently(List<OutboxMessage> batch) {
-        // Шаг 1: submit все задачи, сохраняем Future в том же порядке что и batch
         List<Future<PublishOutcome>> futures = new ArrayList<>(batch.size());
         for (OutboxMessage msg : batch) {
             futures.add(executor.submit(() -> {
@@ -77,23 +76,14 @@ public class OutboxPoller {
             }));
         }
 
-        // Шаг 2: собираем результаты, сохраняя соответствие messageId → outcome
         List<PublishOutcome> outcomes = new ArrayList<>(batch.size());
         for (int i = 0; i < futures.size(); i++) {
             OutboxMessage msg = batch.get(i);
             try {
                 outcomes.add(futures.get(i).get());
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                log.error("Interrupted while waiting for publish result, messageId={}",
-                        msg.messageId());
-                outcomes.add(new PublishOutcome.Retryable(
-                        msg.messageId(), "interrupted", e));
             } catch (Exception e) {
-                log.error("Unexpected error collecting publish result, messageId={}",
-                        msg.messageId(), e);
-                outcomes.add(new PublishOutcome.Retryable(
-                        msg.messageId(), "unexpected: " + e.getMessage(), e));
+                log.error("OutboxPoller: publish failed for messageId={}", msg.messageId(), e);
+                outcomes.add(PublishOutcome.retryable(msg.messageId(), e));
             }
         }
         return outcomes;

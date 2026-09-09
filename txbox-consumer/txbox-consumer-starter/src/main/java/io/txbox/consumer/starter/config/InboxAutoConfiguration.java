@@ -6,6 +6,7 @@ import io.txbox.consumer.kafka.listener.InboxKafkaListener;
 import io.txbox.consumer.kafka.dispatcher.InboxEventDispatcher;
 import io.txbox.consumer.jpa.repository.InboxJpaRepository;
 import io.txbox.consumer.jpa.store.JpaInboxStore;
+import io.txbox.consumer.starter.health.InboxHealthIndicator;
 import io.txbox.consumer.starter.registrar.InboxKafkaListenerRegistrar;
 import io.txbox.consumer.store.InboxStore;
 import lombok.RequiredArgsConstructor;
@@ -105,5 +106,10 @@ public class InboxAutoConfiguration {
                 handler,
                 messageHandlerMethodFactory
         );
+    }
+
+    @Bean
+    public InboxHealthIndicator inboxHealthIndicator(InboxStore inboxStore) {
+        return new InboxHealthIndicator(inboxStore);
     }
 }

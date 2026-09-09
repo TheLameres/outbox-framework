@@ -1,4 +1,4 @@
-package io.txbox.producer.starter;
+package io.txbox.producer.starter.template;
 
 import io.txbox.core.event.DomainEvent;
 import io.txbox.core.model.OutboxMessage;
@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.function.Function;
 
 /**
- * API для бизнес-кода. Сериализует объект, помеченный {@link DomainEvent},
+ * Публичный API для бизнес-кода. Сериализует объект, помеченный {@link DomainEvent},
  * в JSON → OutboxMessage → store.save().
  *
  * <p>Принимает любой объект с аннотацией {@code @DomainEvent}: class, record,

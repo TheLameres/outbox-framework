@@ -1,7 +1,7 @@
-package io.txbox.producer.starter;
+package io.txbox.producer.starter.config;
 
-import io.txbox.producer.starter.OutboxProperties.Maintenance;
-import io.txbox.producer.starter.OutboxProperties.Polling;
+import io.txbox.producer.starter.config.OutboxProperties.Maintenance;
+import io.txbox.producer.starter.config.OutboxProperties.Polling;
 
 /**
  * Единственная точка входа для настроек из application.yml/properties.

@@ -1,4 +1,4 @@
-package io.txbox.producer.starter;
+package io.txbox.producer.starter.health;
 
 import io.txbox.core.store.MessageStats;
 import io.txbox.producer.jpa.store.JpaOutboxStore;

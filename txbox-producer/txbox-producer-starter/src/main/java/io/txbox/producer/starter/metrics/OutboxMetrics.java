@@ -1,4 +1,4 @@
-package io.txbox.producer.starter;
+package io.txbox.producer.starter.metrics;
 
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
