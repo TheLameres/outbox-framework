@@ -47,8 +47,6 @@ public class OutboxPoller {
                 : Executors.newFixedThreadPool(concurrency);
     }
 
-    @Scheduled(fixedDelayString =
-            "#{@outboxProperties.polling().interval().toMillis()}")
     public void poll() {
         if (!properties.enabled() || !properties.polling().enabled()) return;
 

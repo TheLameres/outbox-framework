@@ -1,0 +1,24 @@
+package io.txbox.examples.entites;
+
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.math.BigDecimal;
+import java.util.UUID;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@Entity
+@Table(name = "orders")
+public class OrderEntity extends AbstractEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    private BigDecimal sum;
+
+    private String productName;
+}

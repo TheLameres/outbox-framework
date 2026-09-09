@@ -1,10 +1,12 @@
 package io.txbox.consumer.starter.config;
 
 import io.txbox.consumer.jpa.entity.InboxMessageEntity;
+import io.txbox.consumer.kafka.configuration.InboxConfiguration;
 import io.txbox.consumer.kafka.listener.InboxKafkaListener;
 import io.txbox.consumer.kafka.dispatcher.InboxEventDispatcher;
 import io.txbox.consumer.jpa.repository.InboxJpaRepository;
 import io.txbox.consumer.jpa.store.JpaInboxStore;
+import io.txbox.consumer.starter.registrar.InboxKafkaListenerRegistrar;
 import io.txbox.consumer.store.InboxStore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -16,8 +18,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
+import org.springframework.kafka.config.KafkaListenerContainerFactory;
+import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.listener.ContainerProperties;
+import org.springframework.kafka.listener.adapter.KafkaMessageHandlerMethodFactory;
+import org.springframework.messaging.handler.annotation.support.DefaultMessageHandlerMethodFactory;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 /**
@@ -77,4 +83,28 @@ public class InboxAutoConfiguration {
 
         return factory;
     }
+
+    @Bean
+    public DefaultMessageHandlerMethodFactory kafkaMessageHandlerMethodFactory() {
+        return new DefaultMessageHandlerMethodFactory();
+    }
+
+    @Bean
+    public InboxKafkaListenerRegistrar inboxKafkaListenerRegistrar(
+            KafkaListenerEndpointRegistry registry,
+            KafkaListenerContainerFactory<?> inboxListenerContainerFactory,
+            InboxConfiguration inboxConfiguration,
+            InboxKafkaListener handler,
+            DefaultMessageHandlerMethodFactory messageHandlerMethodFactory
+    ) {
+        return new InboxKafkaListenerRegistrar(
+                registry,
+                inboxListenerContainerFactory,
+                inboxConfiguration,
+                handler,
+                messageHandlerMethodFactory
+        );
+    }
+
+
 }

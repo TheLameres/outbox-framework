@@ -19,6 +19,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import tools.jackson.databind.ObjectMapper;
 
@@ -26,9 +27,8 @@ import tools.jackson.databind.ObjectMapper;
 @EnableConfigurationProperties(OutboxProperties.class)
 @EnableJpaRepositories(basePackages = "io.txbox.producer.jpa.repository")
 @EntityScan(basePackages = "io.txbox.producer.jpa.entity")
+@EnableScheduling
 public class OutboxAutoConfiguration {
-
-    // ── хранилище ────────────────────────────────────────────────────────────
 
     @Bean
     @ConditionalOnMissingBean
@@ -42,14 +42,34 @@ public class OutboxAutoConfiguration {
         return new OutboxTemplate(store, objectMapper);
     }
 
-    // ── Kafka ─────────────────────────────────────────────────────────────────
-
     @Bean
     OutboxHealthIndicator outboxHealthIndicator(JpaOutboxStore store) {
         return new OutboxHealthIndicator(store);
     }
 
-    // ── поллер ───────────────────────────────────────────────────────────────
+
+    @Bean
+    @ConditionalOnMissingBean
+    OutboxPoller outboxPoller(OutboxStore store,
+                              OutboxPublisher publisher,
+                              OutboxProperties properties) {
+        return new OutboxPoller(store, publisher, properties);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    OutboxMaintenance outboxMaintenance(JpaOutboxStore store,
+                                        OutboxProperties properties) {
+        return new OutboxMaintenance(store, properties);
+    }
+
+    @Bean
+    OutboxSchedulerManager outboxSchedulerManager(TaskScheduler taskScheduler,
+                                                  OutboxProperties outboxProperties,
+                                                  OutboxPoller outboxPoller,
+                                                  OutboxMaintenance outboxMaintenance) {
+        return new OutboxSchedulerManager(taskScheduler, outboxProperties, outboxPoller, outboxMaintenance);
+    }
 
     @Bean
     @ConditionalOnClass(MeterRegistry.class)
@@ -83,30 +103,6 @@ public class OutboxAutoConfiguration {
                                                   OutboxProperties properties) {
             return new KafkaOutboxPublisher(
                     kafkaTemplate, resolver, properties.retry().sendTimeout());
-        }
-    }
-
-    // ── metrics ───────────────────────────────────────────────────────────────
-
-    @Configuration(proxyBeanMethods = false)
-    @EnableScheduling
-    @ConditionalOnProperty(prefix = "txbox.producer.polling", name = "enabled",
-            matchIfMissing = true)
-    static class PollingConfiguration {
-
-        @Bean
-        @ConditionalOnMissingBean
-        OutboxPoller outboxPoller(OutboxStore store,
-                                  OutboxPublisher publisher,
-                                  OutboxProperties properties) {
-            return new OutboxPoller(store, publisher, properties);
-        }
-
-        @Bean
-        @ConditionalOnMissingBean
-        OutboxMaintenance outboxMaintenance(JpaOutboxStore store,
-                                            OutboxProperties properties) {
-            return new OutboxMaintenance(store, properties);
         }
     }
 }

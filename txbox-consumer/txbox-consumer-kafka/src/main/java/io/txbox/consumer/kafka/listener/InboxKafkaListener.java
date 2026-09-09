@@ -1,12 +1,12 @@
 package io.txbox.consumer.kafka.listener;
 
+import io.txbox.consumer.kafka.configuration.InboxConfiguration;
 import io.txbox.consumer.kafka.dispatcher.InboxEventDispatcher;
 import io.txbox.consumer.model.InboundEventContext;
 import io.txbox.consumer.outcome.ProcessingOutcome;
 import io.txbox.consumer.store.InboxStore;
 import io.txbox.core.model.InboxMessage;
 import io.txbox.kafka.header.TxBoxHeaders;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -35,11 +35,16 @@ import java.util.UUID;
  * </ol>
  */
 @Slf4j
-@RequiredArgsConstructor
 public class InboxKafkaListener {
 
     private final InboxStore store;
     private final InboxEventDispatcher dispatcher;
+
+
+    public InboxKafkaListener(InboxStore store, InboxEventDispatcher dispatcher) {
+        this.store = store;
+        this.dispatcher = dispatcher;
+    }
 
     private static UUID parseUUID(String value, int partition, long offset) {
         if (value != null && !value.isBlank()) {
@@ -62,14 +67,7 @@ public class InboxKafkaListener {
         return Instant.now();
     }
 
-    // ── helpers ───────────────────────────────────────────────────────────────
-
     @Transactional
-    @KafkaListener(
-            topics = "${txbox.consumer.kafka.topic}",
-            groupId = "${txbox.consumer.kafka.group-id}",
-            containerFactory = "inboxListenerContainerFactory"
-    )
     public void listen(ConsumerRecord<String, String> record, Acknowledgment ack) {
         int partition = record.partition();
         long offset = record.offset();
