@@ -36,7 +36,7 @@ public class JpaInboxStore
     // ── save: идемпотентная вставка ───────────────────────────────────────────
 
     @Override
-    @Transactional
+    @Transactional(transactionManager = "txBoxTransactionalManager")
     public void save(InboxMessage message) {
         boolean exists = repository
                 .findByPartitionAndOffset(message.partition(), message.offset())
@@ -52,7 +52,7 @@ public class JpaInboxStore
     // ── переходы статусов (в той же TX что и handler) ─────────────────────────
 
     @Override
-    @Transactional
+    @Transactional(transactionManager = "txBoxTransactionalManager")
     public void markProcessed(UUID messageId) {
         repository.findById(messageId).ifPresentOrElse(
                 e -> {
@@ -64,7 +64,7 @@ public class JpaInboxStore
     }
 
     @Override
-    @Transactional
+    @Transactional(transactionManager = "txBoxTransactionalManager")
     public void markFailed(UUID messageId, String reason) {
         repository.findById(messageId).ifPresentOrElse(
                 e -> {
@@ -76,7 +76,7 @@ public class JpaInboxStore
     }
 
     @Override
-    @Transactional
+    @Transactional(transactionManager = "txBoxTransactionalManager")
     public void markSkipped(UUID messageId, String reason) {
         repository.findById(messageId).ifPresentOrElse(
                 e -> {
@@ -88,7 +88,7 @@ public class JpaInboxStore
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, transactionManager = "txBoxTransactionalManager")
     public Optional<InboxMessage> findByKafkaPosition(int partition, long offset) {
         return repository.findByPartitionAndOffset(partition, offset)
                 .map(InboxMessageEntity::toMessage);
@@ -97,7 +97,7 @@ public class JpaInboxStore
     // ── Maintenance ───────────────────────────────────────────────────────────
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional(propagation = Propagation.REQUIRES_NEW, transactionManager = "txBoxTransactionalManager")
     protected int doPurgeProcessed(Instant before, int limit) {
         return repository.purgeProcessed(before, Limit.of(limit));
     }
@@ -105,7 +105,7 @@ public class JpaInboxStore
     // ── Metrics / Health ──────────────────────────────────────────────────────
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, transactionManager = "txBoxTransactionalManager")
     public MessageStats getStats() {
         return new MessageStats(
                 0L,                                              // pending — inbox не имеет

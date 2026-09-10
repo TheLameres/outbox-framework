@@ -38,7 +38,7 @@ public class JpaOutboxStore
     // ── TX#1: сохранить в той же транзакции что и бизнес-данные ─────────────
 
     @Override
-    @Transactional
+    @Transactional(transactionManager = "txBoxTransactionalManager")
     public void save(OutboxMessage message) {
         repository.save(OutboxEventEntity.from(message));
     }
@@ -46,7 +46,7 @@ public class JpaOutboxStore
     // ── TX#2: захват пачки ───────────────────────────────────────────────────
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional(propagation = Propagation.REQUIRES_NEW, transactionManager = "txBoxTransactionalManager")
     public List<OutboxMessage> claimBatch(int batchSize) {
         List<OutboxEventEntity> batch = repository.claimBatch(batchSize);
         batch.forEach(OutboxEventEntity::markInFlight);
@@ -58,7 +58,7 @@ public class JpaOutboxStore
     // ── TX#3: применить результаты публикации ────────────────────────────────
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional(propagation = Propagation.REQUIRES_NEW, transactionManager = "txBoxTransactionalManager")
     public void applyOutcomes(List<PublishOutcome> outcomes, int maxRetries) {
         Map<UUID, OutboxEventEntity> entities = repository
                 .findAllById(outcomes.stream().map(PublishOutcome::messageId).toList())
@@ -105,7 +105,7 @@ public class JpaOutboxStore
     // ── Maintenance ──────────────────────────────────────────────────────────
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional(propagation = Propagation.REQUIRES_NEW, transactionManager = "txBoxTransactionalManager")
     public int reclaimStale(Duration timeout) {
         Instant before = Instant.now().minus(timeout);
         int count = repository.reclaimStale(before);
@@ -114,7 +114,7 @@ public class JpaOutboxStore
     }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional(propagation = Propagation.REQUIRES_NEW, transactionManager = "txBoxTransactionalManager")
     public void requeue(UUID messageId) {
         repository.findById(messageId).ifPresentOrElse(
                 e -> {
@@ -138,7 +138,7 @@ public class JpaOutboxStore
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, transactionManager = "txBoxTransactionalManager")
     public MessageStats getStats() {
         return new MessageStats(
                 repository.countByStatus(MessageStatus.PENDING),

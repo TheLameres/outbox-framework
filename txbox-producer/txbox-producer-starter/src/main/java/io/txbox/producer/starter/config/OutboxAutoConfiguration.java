@@ -3,7 +3,7 @@ package io.txbox.producer.starter.config;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.txbox.core.routing.DestinationResolver;
-import io.txbox.jpa.TxBoxJpaPackagesCustomizer;
+import io.txbox.jpa.SharedJpaAutoConfiguration;
 import io.txbox.producer.api.OutboxPublisher;
 import io.txbox.producer.api.OutboxStore;
 import io.txbox.producer.jpa.repository.OutboxJpaRepository;
@@ -20,40 +20,31 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.data.jpa.autoconfigure.DataJpaRepositoriesAutoConfiguration;
 import org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration;
-import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.data.repository.config.BootstrapMode;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import tools.jackson.databind.ObjectMapper;
 
-import java.util.List;
-
-@AutoConfiguration(after = HibernateJpaAutoConfiguration.class)
+@AutoConfiguration(after = {
+        HibernateJpaAutoConfiguration.class,
+        DataJpaRepositoriesAutoConfiguration.class,
+        SharedJpaAutoConfiguration.class
+})
 @EnableConfigurationProperties(OutboxProperties.class)
-@EnableJpaRepositories(basePackages = "io.txbox.producer.jpa.repository",
-        entityManagerFactoryRef = "txBoxEntityManagerFactoryBean",
-        bootstrapMode = BootstrapMode.LAZY)
 @EnableScheduling
 public class OutboxAutoConfiguration {
 
-    @Bean
-    public TxBoxJpaPackagesCustomizer outBoxJpaPackagesCustomizer() {
-        return () -> List.of("io.txbox.producer.jpa.entity");
-    }
 
     @Bean
-    @ConditionalOnMissingBean
     JpaOutboxStore jpaOutboxStore(OutboxJpaRepository repository) {
         return new JpaOutboxStore(repository);
     }
 
     @Bean
-    @ConditionalOnMissingBean
     OutboxTemplate outboxTemplate(OutboxStore store, ObjectMapper objectMapper) {
         return new OutboxTemplate(store, objectMapper);
     }

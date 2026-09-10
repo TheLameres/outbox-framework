@@ -1,1 +1,2 @@
+io.txbox.consumer.starter.config.InboxEntityAutoConfiguration
 io.txbox.consumer.starter.config.InboxAutoConfiguration

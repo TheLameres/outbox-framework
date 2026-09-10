@@ -1,56 +1,41 @@
 package io.txbox.consumer.starter.config;
 
-import io.txbox.consumer.jpa.entity.InboxMessageEntity;
-import io.txbox.consumer.kafka.configuration.InboxConfiguration;
-import io.txbox.consumer.kafka.listener.InboxKafkaListener;
-import io.txbox.consumer.kafka.dispatcher.InboxEventDispatcher;
 import io.txbox.consumer.jpa.repository.InboxJpaRepository;
 import io.txbox.consumer.jpa.store.JpaInboxStore;
+import io.txbox.consumer.kafka.configuration.InboxConfiguration;
+import io.txbox.consumer.kafka.dispatcher.InboxEventDispatcher;
+import io.txbox.consumer.kafka.listener.InboxKafkaListener;
 import io.txbox.consumer.starter.health.InboxHealthIndicator;
 import io.txbox.consumer.starter.registrar.InboxKafkaListenerRegistrar;
 import io.txbox.consumer.store.InboxStore;
-import io.txbox.jpa.TxBoxJpaPackagesCustomizer;
+import io.txbox.jpa.SharedJpaAutoConfiguration;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.data.jpa.autoconfigure.DataJpaRepositoriesAutoConfiguration;
 import org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration;
-import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.config.KafkaListenerContainerFactory;
 import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.listener.ContainerProperties;
-import org.springframework.kafka.listener.adapter.KafkaMessageHandlerMethodFactory;
 import org.springframework.messaging.handler.annotation.support.DefaultMessageHandlerMethodFactory;
-import org.springframework.transaction.annotation.EnableTransactionManagement;
 import tools.jackson.databind.ObjectMapper;
-
-import java.util.List;
 
 /**
  * Spring Boot auto-configuration для consumer-side (inbox).
  * Регистрирует бины для Kafka listener'а и JPA store.
  */
-@AutoConfiguration(after = HibernateJpaAutoConfiguration.class)
+@AutoConfiguration(after = {
+        HibernateJpaAutoConfiguration.class,
+        DataJpaRepositoriesAutoConfiguration.class,
+        SharedJpaAutoConfiguration.class
+})
 @EnableConfigurationProperties(InboxProperties.class)
-@EnableJpaRepositories(basePackages = "io.txbox.consumer.jpa.repository",
-        entityManagerFactoryRef = "txBoxEntityManagerFactoryBean")
 @RequiredArgsConstructor
-
 public class InboxAutoConfiguration {
-
-    private final InboxProperties properties;
-
-    @Bean
-    public TxBoxJpaPackagesCustomizer inBoxJpaPackagesCustomizer() {
-        return () -> List.of("io.txbox.consumer.jpa.entity");
-    }
 
     @Bean
     public InboxStore inboxStore(InboxJpaRepository repository) {
@@ -59,7 +44,8 @@ public class InboxAutoConfiguration {
 
     @Bean
     public InboxEventDispatcher inboxEventDispatcher(ApplicationContext context,
-                                                     ObjectMapper objectMapper) {
+                                                     ObjectMapper objectMapper,
+                                                     InboxProperties properties) {
         return new InboxEventDispatcher(context, objectMapper, properties);
     }
 
@@ -75,7 +61,8 @@ public class InboxAutoConfiguration {
      */
     @Bean(name = "inboxListenerContainerFactory")
     public ConcurrentKafkaListenerContainerFactory<String, String>
-    inboxListenerContainerFactory(ConsumerFactory<String, String> consumerFactory) {
+    inboxListenerContainerFactory(ConsumerFactory<String, String> consumerFactory,
+                                  InboxProperties properties) {
 
         ConcurrentKafkaListenerContainerFactory<String, String> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();

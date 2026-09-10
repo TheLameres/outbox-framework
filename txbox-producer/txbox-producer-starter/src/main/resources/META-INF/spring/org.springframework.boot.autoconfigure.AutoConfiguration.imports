@@ -1,1 +1,2 @@
+io.txbox.producer.starter.config.OutboxEntityAutoConfiguration
 io.txbox.producer.starter.config.OutboxAutoConfiguration
