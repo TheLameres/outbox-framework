@@ -9,6 +9,7 @@ import io.txbox.consumer.jpa.store.JpaInboxStore;
 import io.txbox.consumer.starter.health.InboxHealthIndicator;
 import io.txbox.consumer.starter.registrar.InboxKafkaListenerRegistrar;
 import io.txbox.consumer.store.InboxStore;
+import io.txbox.jpa.TxBoxJpaPackagesCustomizer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -29,22 +30,28 @@ import org.springframework.messaging.handler.annotation.support.DefaultMessageHa
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import tools.jackson.databind.ObjectMapper;
 
+import java.util.List;
+
 /**
  * Spring Boot auto-configuration для consumer-side (inbox).
  * Регистрирует бины для Kafka listener'а и JPA store.
  */
 @AutoConfiguration
 @EnableConfigurationProperties(InboxProperties.class)
-@EnableJpaRepositories(basePackageClasses = InboxJpaRepository.class)
-@EntityScan(basePackages = "io.txbox.consumer.jpa.entity")
+@EnableJpaRepositories(basePackages = "io.txbox.consumer.jpa.repository",
+        entityManagerFactoryRef = "txBoxEntityManagerFactoryBean")
 @RequiredArgsConstructor
 public class InboxAutoConfiguration {
 
     private final InboxProperties properties;
-    private final InboxJpaRepository repository;
 
     @Bean
-    public InboxStore inboxStore() {
+    public TxBoxJpaPackagesCustomizer inBoxJpaPackagesCustomizer() {
+        return () -> List.of("io.txbox.consumer.jpa.entity");
+    }
+
+    @Bean
+    public InboxStore inboxStore(InboxJpaRepository repository) {
         return new JpaInboxStore(repository);
     }
 

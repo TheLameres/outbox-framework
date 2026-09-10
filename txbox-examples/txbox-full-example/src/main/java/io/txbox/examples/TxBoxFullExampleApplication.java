@@ -7,9 +7,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication
-@EnableJpaRepositories
 @EnableJpaAuditing
-@EntityScan
 public class TxBoxFullExampleApplication {
     static void main(String[] args) {
         SpringApplication.run(TxBoxFullExampleApplication.class, args);

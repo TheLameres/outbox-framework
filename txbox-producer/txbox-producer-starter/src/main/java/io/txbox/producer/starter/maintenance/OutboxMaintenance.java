@@ -22,7 +22,6 @@ public class OutboxMaintenance {
     private final OutboxProperties properties;
 
     public void run() {
-        if (!properties.enabled() || !properties.maintenance().enabled()) return;
         purgeProcessed();
         reclaimStale();
     }

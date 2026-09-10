@@ -48,8 +48,6 @@ public class OutboxPoller {
     }
 
     public void poll() {
-        if (!properties.enabled() || !properties.polling().enabled()) return;
-
         // TX#2 — захват пачки
         List<OutboxMessage> batch = store.claimBatch(properties.polling().batchSize());
         if (batch.isEmpty()) return;
@@ -83,7 +81,7 @@ public class OutboxPoller {
                 outcomes.add(futures.get(i).get());
             } catch (Exception e) {
                 log.error("OutboxPoller: publish failed for messageId={}", msg.messageId(), e);
-                outcomes.add(PublishOutcome.retryable(msg.messageId(), e));
+                outcomes.add(new PublishOutcome.Retryable(msg.messageId(), e.getMessage(), e));
             }
         }
         return outcomes;

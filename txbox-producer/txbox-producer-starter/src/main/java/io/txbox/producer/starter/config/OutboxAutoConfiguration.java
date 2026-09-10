@@ -3,6 +3,7 @@ package io.txbox.producer.starter.config;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.txbox.core.routing.DestinationResolver;
+import io.txbox.jpa.TxBoxJpaPackagesCustomizer;
 import io.txbox.producer.api.OutboxPublisher;
 import io.txbox.producer.api.OutboxStore;
 import io.txbox.producer.jpa.repository.OutboxJpaRepository;
@@ -23,17 +24,26 @@ import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.data.repository.config.BootstrapMode;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import tools.jackson.databind.ObjectMapper;
 
+import java.util.List;
+
 @AutoConfiguration
 @EnableConfigurationProperties(OutboxProperties.class)
-@EnableJpaRepositories(basePackages = "io.txbox.producer.jpa.repository")
-@EntityScan(basePackages = "io.txbox.producer.jpa.entity")
+@EnableJpaRepositories(basePackages = "io.txbox.producer.jpa.repository",
+        entityManagerFactoryRef = "txBoxEntityManagerFactoryBean",
+        bootstrapMode = BootstrapMode.LAZY)
 @EnableScheduling
 public class OutboxAutoConfiguration {
+
+    @Bean
+    public TxBoxJpaPackagesCustomizer outBoxJpaPackagesCustomizer() {
+        return () -> List.of("io.txbox.producer.jpa.entity");
+    }
 
     @Bean
     @ConditionalOnMissingBean
@@ -81,8 +91,6 @@ public class OutboxAutoConfiguration {
                                 ObjectProvider<MeterRegistry> meters) {
         return new OutboxMetrics(store, meters.getIfAvailable(SimpleMeterRegistry::new));
     }
-
-    // ── Kafka ─────────────────────────────────────────────────────────────────
 
     @Configuration(proxyBeanMethods = false)
     @ConditionalOnClass(KafkaTemplate.class)

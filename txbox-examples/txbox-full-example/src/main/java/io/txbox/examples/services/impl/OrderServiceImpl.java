@@ -1,17 +1,19 @@
 package io.txbox.examples.services.impl;
 
-import io.txbox.examples.dto.*;
+import io.txbox.examples.dto.ChangeStatusDto;
+import io.txbox.examples.dto.CreateOrderRequestDto;
+import io.txbox.examples.dto.CreateOrderResponseDto;
+import io.txbox.examples.dto.OrderDto;
 import io.txbox.examples.entites.OrderEntity;
 import io.txbox.examples.event.OrderEvents;
 import io.txbox.examples.exceptions.NotFoundException;
 import io.txbox.examples.repositories.OrderEntityRepository;
 import io.txbox.examples.services.OrderService;
-import io.txbox.producer.starter.OutboxTemplate;
+import io.txbox.producer.starter.template.OutboxTemplate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -43,6 +45,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public OrderDto findById(UUID id) {
         return orderEntityRepository.findById(id)
                 .map(it -> new OrderDto(
