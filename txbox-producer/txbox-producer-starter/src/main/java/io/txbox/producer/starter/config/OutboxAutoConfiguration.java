@@ -20,6 +20,7 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,7 +33,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
 
-@AutoConfiguration
+@AutoConfiguration(after = HibernateJpaAutoConfiguration.class)
 @EnableConfigurationProperties(OutboxProperties.class)
 @EnableJpaRepositories(basePackages = "io.txbox.producer.jpa.repository",
         entityManagerFactoryRef = "txBoxEntityManagerFactoryBean",

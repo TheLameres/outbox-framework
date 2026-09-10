@@ -22,7 +22,7 @@ txbox:
     # Пакеты для сканирования @DomainEvent классов.
     # Если не задано — fallback на пакеты из @SpringBootApplication.
     domain-event-base-packages:
-      - io.txbox.examples.event
+      - com.somecompany.examples.event
 
 logging:
   level:

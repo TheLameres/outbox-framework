@@ -2,20 +2,20 @@ package io.txbox.jpa;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration;
 import org.springframework.boot.jpa.EntityManagerFactoryBuilder;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 
 import javax.sql.DataSource;
-import java.util.ArrayList;
 import java.util.List;
 
-@AutoConfiguration
+@AutoConfiguration(after = HibernateJpaAutoConfiguration.class)
 @Slf4j
 public class SharedJpaAutoConfiguration {
 
-    @Bean
+    @Bean(name = "txBoxEntityManagerFactoryBean")
     public LocalContainerEntityManagerFactoryBean txBoxEntityManagerFactoryBean(
             EntityManagerFactoryBuilder builder,
             DataSource dataSource,

@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -36,11 +37,12 @@ import java.util.List;
  * Spring Boot auto-configuration для consumer-side (inbox).
  * Регистрирует бины для Kafka listener'а и JPA store.
  */
-@AutoConfiguration
+@AutoConfiguration(after = HibernateJpaAutoConfiguration.class)
 @EnableConfigurationProperties(InboxProperties.class)
 @EnableJpaRepositories(basePackages = "io.txbox.consumer.jpa.repository",
         entityManagerFactoryRef = "txBoxEntityManagerFactoryBean")
 @RequiredArgsConstructor
+
 public class InboxAutoConfiguration {
 
     private final InboxProperties properties;
