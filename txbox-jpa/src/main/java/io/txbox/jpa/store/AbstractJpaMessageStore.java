@@ -34,7 +34,7 @@ public abstract class AbstractJpaMessageStore<
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, transactionManager = "txBoxTransactionalManager")
     public boolean wasProcessed(UUID messageId) {
         return repository.findById(messageId)
                 .map(e -> e.getStatus().isTerminal())
@@ -42,13 +42,13 @@ public abstract class AbstractJpaMessageStore<
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, transactionManager = "txBoxTransactionalManager")
     public Optional<T> findById(UUID messageId) {
         return repository.findById(messageId).map(this::toMessage);
     }
 
     @Override
-    @Transactional
+    @Transactional(transactionManager = "txBoxTransactionalManager")
     public int purgeProcessed(Duration retention, int limit) {
         return doPurgeProcessed(Instant.now().minus(retention), limit);
     }
