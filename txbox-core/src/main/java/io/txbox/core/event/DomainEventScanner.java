@@ -100,7 +100,7 @@ public class DomainEventScanner {
             }
         }
 
-        log.info("DomainEventScanner: found {} type(s) in packages {}", result.size(), basePackages);
+        log.debug("DomainEventScanner: found {} type(s) in packages {}", result.size(), basePackages);
 
         // TODO: SchemaRegistry integration
         // При регистрации каждого @DomainEvent-типа необходимо:

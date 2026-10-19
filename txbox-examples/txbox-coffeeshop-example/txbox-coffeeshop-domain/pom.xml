@@ -17,6 +17,17 @@
             <groupId>thelameres</groupId>
             <artifactId>txbox-core</artifactId>
         </dependency>
+
+        <!--
+            Только для тестов: проверяем, что события переживают JSON-раундтрип
+            и находятся сканером фреймворка по тем же eventType, что уезжают в Kafka.
+            Runtime-зависимости у домена нет — он остаётся чистым.
+        -->
+        <dependency>
+            <groupId>tools.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
 
