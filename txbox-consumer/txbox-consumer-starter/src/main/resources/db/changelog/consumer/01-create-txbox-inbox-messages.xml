@@ -7,7 +7,7 @@
 
     <changeSet id="consumer-001-create-txbox-inbox-messages" author="txbox">
 
-        <createTable tableName="txbox_inbox_messages">
+        <createTable tableName="txbox_inbox_events">
             <column name="message_id" type="uuid">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
@@ -47,35 +47,35 @@
 
         <!-- Уникальный индекс дедупликации — главная защита от дублей -->
         <addUniqueConstraint
-                tableName="txbox_inbox_messages"
+                tableName="txbox_inbox_events"
                 columnNames="partition_idx, offset_val"
                 constraintName="uk_txbox_inbox_kafka_position"/>
 
         <createIndex indexName="idx_txbox_inbox_status"
-                     tableName="txbox_inbox_messages">
+                     tableName="txbox_inbox_events">
             <column name="status"/>
             <column name="received_at"/>
         </createIndex>
 
         <createIndex indexName="idx_txbox_inbox_purge"
-                     tableName="txbox_inbox_messages">
+                     tableName="txbox_inbox_events">
             <column name="processed_at"/>
         </createIndex>
 
         <!-- Partial indexes через raw SQL -->
         <sql>
             CREATE INDEX idx_txbox_inbox_active
-            ON txbox_inbox_messages (received_at)
+            ON txbox_inbox_events (received_at)
             WHERE status = 'RECEIVED';
         </sql>
 
         <rollback>
             <sql>DROP INDEX IF EXISTS idx_txbox_inbox_active;</sql>
-            <dropIndex tableName="txbox_inbox_messages" indexName="idx_txbox_inbox_purge"/>
-            <dropIndex tableName="txbox_inbox_messages" indexName="idx_txbox_inbox_status"/>
-            <dropUniqueConstraint tableName="txbox_inbox_messages"
+            <dropIndex tableName="txbox_inbox_events" indexName="idx_txbox_inbox_purge"/>
+            <dropIndex tableName="txbox_inbox_events" indexName="idx_txbox_inbox_status"/>
+            <dropUniqueConstraint tableName="txbox_inbox_events"
                                   constraintName="uk_txbox_inbox_kafka_position"/>
-            <dropTable tableName="txbox_inbox_messages"/>
+            <dropTable tableName="txbox_inbox_events"/>
         </rollback>
 
     </changeSet>

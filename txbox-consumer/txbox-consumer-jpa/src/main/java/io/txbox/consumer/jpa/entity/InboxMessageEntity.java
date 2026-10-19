@@ -26,7 +26,7 @@ import java.util.SequencedMap;
  */
 @Entity
 @Table(
-        name = "txbox_inbox_messages",
+        name = "txbox_inbox_events",
         indexes = {
                 @Index(name = "idx_txbox_inbox_position",
                         columnList = "partition_idx, offset_val",

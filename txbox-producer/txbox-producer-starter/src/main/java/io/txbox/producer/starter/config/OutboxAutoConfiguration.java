@@ -24,6 +24,7 @@ import org.springframework.boot.data.jpa.autoconfigure.DataJpaRepositoriesAutoCo
 import org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -35,6 +36,7 @@ import tools.jackson.databind.ObjectMapper;
         SharedJpaAutoConfiguration.class
 })
 @EnableConfigurationProperties(OutboxProperties.class)
+@EnableJpaRepositories(basePackages = {"io.txbox.producer.jpa.repository"})
 @EnableScheduling
 public class OutboxAutoConfiguration {
 

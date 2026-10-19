@@ -16,6 +16,7 @@ import org.springframework.boot.data.jpa.autoconfigure.DataJpaRepositoriesAutoCo
 import org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.config.KafkaListenerContainerFactory;
 import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
@@ -34,7 +35,7 @@ import tools.jackson.databind.ObjectMapper;
         SharedJpaAutoConfiguration.class
 })
 @EnableConfigurationProperties(InboxProperties.class)
-@RequiredArgsConstructor
+@EnableJpaRepositories(basePackages = {"io.txbox.consumer.jpa.repository"})
 public class InboxAutoConfiguration {
 
     @Bean

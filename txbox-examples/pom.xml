@@ -15,6 +15,7 @@
 
     <modules>
         <module>txbox-full-example</module>
+        <module>txbox-coffeeshop-example</module>
     </modules>
 
 </project>

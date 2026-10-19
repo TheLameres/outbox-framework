@@ -101,7 +101,6 @@ public abstract class AbstractMessageEntity {
 
     @Override
     public int hashCode() {
-        // стабильный hashCode даже до persist
         return messageId == null ? System.identityHashCode(this) : messageId.hashCode();
     }
 }

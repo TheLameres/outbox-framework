@@ -17,21 +17,22 @@ import tools.jackson.databind.ObjectMapper;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.stream.IntStream;
 
 /**
  * Диспетчер событий: находит и вызывает handler-методы по типу события.
  *
  * <p>Инициализируется один раз при старте приложения ({@link #afterPropertiesSet()}):
  * 1. Сканирует все бины с {@code @InboxEventListener} и индексирует их методы
- *    по ключу {@code "source:eventType"}.
+ * по ключу {@code "source:eventType"}.
  * 2. Запускает {@link DomainEventScanner} по настроенным пакетам и строит
- *    {@link #registeredTypes} — реестр {@code eventType → Class<?>}, который
- *    используется при десериализации payload.
+ * {@link #registeredTypes} — реестр {@code eventType → Class<?>}, который
+ * используется при десериализации payload.
  *
  * <p>На обработку события:
  * 1. Ищет handlers по (source, eventType) включая wildcard {@code "*"}.
  * 2. Резолвит targetType из {@link #registeredTypes} по eventType сообщения
- *    (если handler не объявил конкретный тип параметра).
+ * (если handler не объявил конкретный тип параметра).
  * 3. Десериализует payload через Jackson ObjectMapper в нужный тип.
  * 4. Вызывает handlers по порядку (via {@code @InboxEventHandler.order}).
  * 5. Классифицирует исключения через {@link ProcessingOutcomeClassifier}.
@@ -146,7 +147,7 @@ public class InboxEventDispatcher implements InitializingBean {
             return AutoConfigurationPackages.get(context);
         } catch (IllegalStateException e) {
             log.warn("AutoConfigurationPackages not available; " +
-                     "set txbox.consumer.domain-event-base-packages explicitly.");
+                    "set txbox.consumer.domain-event-base-packages explicitly.");
             return List.of();
         }
     }
@@ -219,13 +220,7 @@ public class InboxEventDispatcher implements InitializingBean {
         Class<?>[] paramTypes = method.getParameterTypes();
         Object[] args = new Object[paramTypes.length];
 
-        for (int i = 0; i < paramTypes.length; i++) {
-            if (paramTypes[i] == InboundEventContext.class) {
-                args[i] = context;
-            } else {
-                args[i] = deserializePayload(message, paramTypes[i]);
-            }
-        }
+        IntStream.range(0, paramTypes.length).forEachOrdered(i -> args[i] = paramTypes[i] == InboundEventContext.class ? context : deserializePayload(message, paramTypes[i]));
 
         method.invoke(handler.listener, args);
     }
@@ -252,9 +247,9 @@ public class InboxEventDispatcher implements InitializingBean {
             if (targetType == null) {
                 throw new IllegalStateException(
                         "No @DomainEvent class registered for eventType='" + message.eventType()
-                        + "'. Annotate the event class with @DomainEvent and ensure its package "
-                        + "is covered by txbox.consumer.domain-event-base-packages "
-                        + "or @SpringBootApplication base package.");
+                                + "'. Annotate the event class with @DomainEvent and ensure its package "
+                                + "is covered by txbox.consumer.domain-event-base-packages "
+                                + "or @SpringBootApplication base package.");
             }
         }
 
@@ -263,12 +258,10 @@ public class InboxEventDispatcher implements InitializingBean {
         } catch (Exception e) {
             throw new IllegalStateException(
                     "Failed to deserialize payload for eventType='" + message.eventType()
-                    + "', targetType=" + targetType.getName()
-                    + ", messageId=" + message.messageId(), e);
+                            + "', targetType=" + targetType.getName()
+                            + ", messageId=" + message.messageId(), e);
         }
     }
-
-    // ── Поиск handlers ───────────────────────────────────────────────────────
 
     private List<HandlerMethod> findHandlers(String source, String eventType) {
         List<HandlerMethod> result = new ArrayList<>();
@@ -286,19 +279,6 @@ public class InboxEventDispatcher implements InitializingBean {
         return source + ":" + eventType;
     }
 
-    // ── Внутренний класс ─────────────────────────────────────────────────────
-
-    private static class HandlerMethod {
-        final Object listener;
-        final Method method;
-        final int order;
-        final boolean idempotent;
-
-        HandlerMethod(Object listener, Method method, int order, boolean idempotent) {
-            this.listener = listener;
-            this.method = method;
-            this.order = order;
-            this.idempotent = idempotent;
-        }
+    private record HandlerMethod(Object listener, Method method, int order, boolean idempotent) {
     }
 }
