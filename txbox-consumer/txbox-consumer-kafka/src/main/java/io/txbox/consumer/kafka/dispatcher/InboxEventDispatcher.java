@@ -159,6 +159,22 @@ public class InboxEventDispatcher implements InitializingBean {
      * Возвращает первый non-Retryable исход или последний Retryable.
      */
     public ProcessingOutcome dispatch(InboxMessage message, InboundEventContext context) {
+        return dispatch(message, context, false);
+    }
+
+    /**
+     * Диспетчеризует сообщение с учётом признака «уже обработано».
+     *
+     * <p>{@code alreadyProcessed = true} означает, что сообщение с таким {@code messageId}
+     * уже завершено в inbox (PROCESSED / FAILED / SKIPPED), но пришло повторно (другой
+     * partition/offset: ребаланс, повторная публикация после {@code reclaimStale}).
+     * В этом случае handlers с {@code @InboxEventHandler(idempotent = true)} пропускаются,
+     * а handlers с {@code idempotent = false} выполняются как обычно.
+     *
+     * @param alreadyProcessed результат {@code InboxStore.wasProcessed(messageId)}
+     */
+    public ProcessingOutcome dispatch(InboxMessage message, InboundEventContext context,
+                                      boolean alreadyProcessed) {
         List<HandlerMethod> handlers = findHandlers(message.source(), message.eventType());
 
         if (handlers.isEmpty()) {
@@ -171,14 +187,10 @@ public class InboxEventDispatcher implements InitializingBean {
 
         for (HandlerMethod handler : handlers) {
             try {
-                if (handler.idempotent) {
-                    boolean alreadyProcessed = context.messageId() != null
-                            && message.headers().containsKey("txbox-already-processed");
-                    if (alreadyProcessed) {
-                        log.debug("Handler idempotent check: skipping duplicate for messageId={}",
-                                context.messageId());
-                        continue;
-                    }
+                if (alreadyProcessed && handler.idempotent) {
+                    log.debug("Idempotent handler {} skipped: duplicate messageId={}",
+                            handler.method.getName(), message.messageId());
+                    continue;
                 }
 
                 invokeHandler(handler, message, context);
@@ -198,7 +210,8 @@ public class InboxEventDispatcher implements InitializingBean {
         }
 
         return lastOutcome != null ? lastOutcome
-                : new ProcessingOutcome.Skipped(message.messageId(), "no successful handler");
+                : new ProcessingOutcome.Skipped(message.messageId(),
+                alreadyProcessed ? "duplicate messageId" : "no successful handler");
     }
 
     // ── Вызов handler-метода ─────────────────────────────────────────────────
@@ -264,14 +277,22 @@ public class InboxEventDispatcher implements InitializingBean {
     }
 
     private List<HandlerMethod> findHandlers(String source, String eventType) {
+        // Ключи: точный source и "любой source" (пустой source у @InboxEventListener),
+        // для каждого — точный eventType и wildcard "*".
+        // LinkedHashSet: если source пуст, два набора ключей совпадают — не дублируем вызовы.
+        Set<String> keys = new LinkedHashSet<>();
+        keys.add(formatKey(source, eventType));
+        keys.add(formatKey(source, "*"));
+        keys.add(formatKey("", eventType));
+        keys.add(formatKey("", "*"));
+
         List<HandlerMethod> result = new ArrayList<>();
-
-        List<HandlerMethod> exact = handlersIndex.get(formatKey(source, eventType));
-        if (exact != null) result.addAll(exact);
-
-        List<HandlerMethod> wildcard = handlersIndex.get(formatKey(source, "*"));
-        if (wildcard != null) result.addAll(wildcard);
-
+        for (String key : keys) {
+            List<HandlerMethod> found = handlersIndex.get(key);
+            if (found != null) result.addAll(found);
+        }
+        // Порядок задаётся @InboxEventHandler.order по всем найденным индексам (сортировка стабильная)
+        result.sort(Comparator.comparingInt(HandlerMethod::order));
         return result;
     }
 

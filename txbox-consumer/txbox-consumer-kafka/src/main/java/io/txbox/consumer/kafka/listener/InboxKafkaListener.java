@@ -74,7 +74,11 @@ public class InboxKafkaListener {
 
         try {
             // 1. Дедупликация
-            if (store.findByKafkaPosition(partition, offset).isPresent()) {
+            // Пропускаем только ЗАВЕРШЁННЫЕ записи. Запись в RECEIVED (предыдущий исход был
+            // Retryable, TX закоммитилась без ack) — это недоделанная обработка, а не дубликат:
+            // её нужно выполнить заново, иначе сообщение будет потеряно.
+            var existing = store.findByKafkaPosition(partition, offset);
+            if (existing.isPresent() && store.wasProcessed(existing.get().messageId())) {
                 log.debug("Inbox duplicate skipped: partition={}, offset={}", partition, offset);
                 ack.acknowledge();
                 return;
@@ -104,14 +108,20 @@ public class InboxKafkaListener {
                     messageId, source, sourceId, eventType, headers,
                     occurredAt, receivedAt);
 
-            // 5. Сохраняем как RECEIVED — в той же TX что и handler
+            // 5. Дедупликация по messageId: то же событие под другим (partition, offset) —
+            //    ребаланс, повторная публикация после reclaimStale. Позиционная проверка выше
+            //    такой дубликат не ловит. true только для ЗАВЕРШЁННЫХ записей.
+            boolean alreadyProcessed = store.wasProcessed(messageId);
+
+            // 6. Сохраняем как RECEIVED в той же TX, что и handler
+            //    (save() идемпотентен: по позиции и по messageId)
             store.save(message);
 
-            // 6. Диспетчеризируем
-            ProcessingOutcome outcome = dispatcher.dispatch(message, context);
+            // 7. Диспетчеризуем
+            ProcessingOutcome outcome = dispatcher.dispatch(message, context, alreadyProcessed);
 
-            // 7. Применяем исход
-            applyOutcome(outcome, ack);
+            // 8. Применяем исход
+            applyOutcome(outcome, ack, alreadyProcessed);
 
         } catch (Exception e) {
             log.error("Inbox processing failed: partition={}, offset={}", partition, offset, e);
@@ -119,7 +129,21 @@ public class InboxKafkaListener {
         }
     }
 
-    private void applyOutcome(ProcessingOutcome outcome, Acknowledgment ack) {
+    private void applyOutcome(ProcessingOutcome outcome, Acknowledgment ack,
+                              boolean alreadyProcessed) {
+        if (alreadyProcessed) {
+            // Исходная запись уже в терминальном статусе — НЕ перезаписываем её
+            // (иначе PROCESSED превратится в SKIPPED/FAILED). Только решаем судьбу offset.
+            if (outcome instanceof ProcessingOutcome.Retryable r) {
+                // Упал handler с idempotent=false — повторяем доставку
+                log.warn("Duplicate event retryable: messageId={}, reason={}",
+                        r.messageId(), r.reason());
+            } else {
+                log.debug("Duplicate event acknowledged: messageId={}", outcome.messageId());
+                ack.acknowledge();
+            }
+            return;
+        }
         switch (outcome) {
             case ProcessingOutcome.Success s -> {
                 store.markProcessed(s.messageId());

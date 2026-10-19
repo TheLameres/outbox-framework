@@ -46,6 +46,13 @@ public class JpaInboxStore
                     message.partition(), message.offset());
             return;
         }
+        // Тот же messageId под другим (partition, offset): запись уже есть, PRIMARY KEY(message_id)
+        // не даст вставить вторую. Не пишем — иначе DataIntegrityViolationException → вечный retry.
+        if (repository.existsById(message.messageId())) {
+            log.debug("Inbox duplicate messageId skipped: messageId={}, partition={}, offset={}",
+                    message.messageId(), message.partition(), message.offset());
+            return;
+        }
         repository.save(InboxMessageEntity.from(message));
     }
 

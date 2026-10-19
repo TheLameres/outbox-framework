@@ -28,9 +28,13 @@ public @interface InboxEventHandler {
     String eventType();
 
     /**
-     * Проверять идемпотентность через InboxStore.wasProcessed().
-     * Если {@code true} и messageId уже обработан — пропустить обработку,
-     * вернуть {@link io.txbox.consumer.outcome.ProcessingOutcome.Skipped}.
+     * Пропускать handler, если событие с тем же {@code messageId} уже завершено в inbox
+     * (PROCESSED / FAILED / SKIPPED) и пришло повторно под другим (partition, offset).
+     * Проверка выполняется через {@code InboxStore.wasProcessed(messageId)}.
+     *
+     * <p>Дубликат по тому же (partition, offset) отсекается раньше, на уровне listener,
+     * независимо от этого флага. {@code false} — handler выполнится и для дубликата
+     * (нужно, если побочный эффект сам идемпотентен или должен повторяться).
      */
     boolean idempotent() default true;
 
