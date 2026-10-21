@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd">
+
+    <changeSet id="barista-001-tickets" author="coffeeshop">
+        <createTable tableName="tickets">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="order_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ticket_no" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="failure_reason" type="varchar(500)"/>
+            <column name="created_at" type="timestamptz">
+                <constraints nullable="false"/>
+            </column>
+            <column name="started_at" type="timestamptz"/>
+            <column name="prepared_at" type="timestamptz"/>
+        </createTable>
+        <!-- Один тикет на заказ: повторное inventory.reserved не создаёт второй -->
+        <addUniqueConstraint tableName="tickets"
+                             columnNames="order_id"
+                             constraintName="uk_ticket_order"/>
+        <createIndex indexName="idx_tickets_status" tableName="tickets">
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

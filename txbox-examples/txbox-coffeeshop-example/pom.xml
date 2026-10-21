@@ -12,6 +12,11 @@
 
     <artifactId>txbox-coffeeshop-example</artifactId>
     <packaging>pom</packaging>
+    <name>TxBox :: Example :: Coffeeshop</name>
+    <description>
+        Три сервиса (order / inventory / barista), связанные сагой через outbox + inbox,
+        плюс Docker-сборка и docker-compose.
+    </description>
 
     <modules>
         <module>txbox-coffeeshop-domain</module>

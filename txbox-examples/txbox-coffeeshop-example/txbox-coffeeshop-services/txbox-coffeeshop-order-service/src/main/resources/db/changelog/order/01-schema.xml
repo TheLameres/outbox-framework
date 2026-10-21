@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd">
+
+    <changeSet id="order-001-menu-items" author="coffeeshop">
+        <createTable tableName="menu_items">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="code" type="varchar(64)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_menu_item_code"/>
+            </column>
+            <column name="name" type="varchar(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="varchar(500)"/>
+            <column name="price_amount" type="numeric(12,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="price_currency" type="varchar(3)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!--
+        Рецепт живёт в сервисе заказов, а не в сервисе склада: order.placed
+        несёт снимок состава, поэтому склад не обращается к меню при обработке.
+    -->
+    <changeSet id="order-002-menu-item-ingredients" author="coffeeshop">
+        <createTable tableName="menu_item_ingredients">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="menu_item_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ingredient_code" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="numeric(14,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="unit" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint
+                baseTableName="menu_item_ingredients" baseColumnNames="menu_item_id"
+                referencedTableName="menu_items" referencedColumnNames="id"
+                constraintName="fk_menu_item_ingredient_item"
+                onDelete="CASCADE"/>
+        <addUniqueConstraint tableName="menu_item_ingredients"
+                             columnNames="menu_item_id, ingredient_code"
+                             constraintName="uk_menu_item_ingredient"/>
+    </changeSet>
+
+    <changeSet id="order-003-orders" author="coffeeshop">
+        <createTable tableName="orders">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="status" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_amount" type="numeric(12,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_currency" type="varchar(3)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="placed_at" type="timestamptz">
+                <constraints nullable="false"/>
+            </column>
+            <column name="failure_reason" type="varchar(500)"/>
+            <column name="created_at" type="timestamptz">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamptz">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex indexName="idx_orders_status" tableName="orders">
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="order-004-order-lines" author="coffeeshop">
+        <createTable tableName="order_lines">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="order_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="menu_item_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="varchar(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="quantity" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="unit_price_amount" type="numeric(12,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="unit_price_currency" type="varchar(3)">
+                <constraints nullable="false"/>
+            </column>
+            <!-- line_no сохраняет порядок строк: без него выборка из БД
+                 вернёт их в произвольном порядке. -->
+            <column name="line_no" type="int">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint
+                baseTableName="order_lines" baseColumnNames="order_id"
+                referencedTableName="orders" referencedColumnNames="id"
+                constraintName="fk_order_line_order"
+                onDelete="CASCADE"/>
+    </changeSet>
+
+    <!-- Меню и рецепты: единый источник для order.placed -->
+    <changeSet id="order-005-seed-menu" author="coffeeshop">
+        <insert tableName="menu_items">
+            <column name="id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="code" value="FLAT_WHITE"/>
+            <column name="name" value="Flat White"/>
+            <column name="description" value="Двойной эспрессо с молоком"/>
+            <column name="price_amount" valueNumeric="3.50"/>
+            <column name="price_currency" value="EUR"/>
+        </insert>
+        <insert tableName="menu_items">
+            <column name="id" value="22222222-2222-2222-2222-222222222222"/>
+            <column name="code" value="ESPRESSO"/>
+            <column name="name" value="Espresso"/>
+            <column name="description" value="Классический эспрессо"/>
+            <column name="price_amount" valueNumeric="2.50"/>
+            <column name="price_currency" value="EUR"/>
+        </insert>
+        <insert tableName="menu_items">
+            <column name="id" value="33333333-3333-3333-3333-333333333333"/>
+            <column name="code" value="CAPPUCCINO"/>
+            <column name="name" value="Cappuccino"/>
+            <column name="description" value="Эспрессо с молочной пеной"/>
+            <column name="price_amount" valueNumeric="4.00"/>
+            <column name="price_currency" value="EUR"/>
+        </insert>
+
+        <!-- Flat White: 18 г кофе, 150 мл молока, стакан -->
+        <insert tableName="menu_item_ingredients">
+            <column name="id" value="a1111111-0000-0000-0000-000000000001"/>
+            <column name="menu_item_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="ingredient_code" value="BEANS_ARABICA"/>
+            <column name="amount" valueNumeric="18"/>
+            <column name="unit" value="GRAM"/>
+        </insert>
+        <insert tableName="menu_item_ingredients">
+            <column name="id" value="a1111111-0000-0000-0000-000000000002"/>
+            <column name="menu_item_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="ingredient_code" value="MILK"/>
+            <column name="amount" valueNumeric="150"/>
+            <column name="unit" value="MILLILITER"/>
+        </insert>
+        <insert tableName="menu_item_ingredients">
+            <column name="id" value="a1111111-0000-0000-0000-000000000003"/>
+            <column name="menu_item_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="ingredient_code" value="CUP"/>
+            <column name="amount" valueNumeric="1"/>
+            <column name="unit" value="PIECE"/>
+        </insert>
+
+        <!-- Espresso: 18 г кофе, стакан -->
+        <insert tableName="menu_item_ingredients">
+            <column name="id" value="a2222222-0000-0000-0000-000000000001"/>
+            <column name="menu_item_id" value="22222222-2222-2222-2222-222222222222"/>
+            <column name="ingredient_code" value="BEANS_ARABICA"/>
+            <column name="amount" valueNumeric="18"/>
+            <column name="unit" value="GRAM"/>
+        </insert>
+        <insert tableName="menu_item_ingredients">
+            <column name="id" value="a2222222-0000-0000-0000-000000000002"/>
+            <column name="menu_item_id" value="22222222-2222-2222-2222-222222222222"/>
+            <column name="ingredient_code" value="CUP"/>
+            <column name="amount" valueNumeric="1"/>
+            <column name="unit" value="PIECE"/>
+        </insert>
+
+        <!-- Cappuccino: 18 г кофе, 120 мл молока, стакан -->
+        <insert tableName="menu_item_ingredients">
+            <column name="id" value="a3333333-0000-0000-0000-000000000001"/>
+            <column name="menu_item_id" value="33333333-3333-3333-3333-333333333333"/>
+            <column name="ingredient_code" value="BEANS_ARABICA"/>
+            <column name="amount" valueNumeric="18"/>
+            <column name="unit" value="GRAM"/>
+        </insert>
+        <insert tableName="menu_item_ingredients">
+            <column name="id" value="a3333333-0000-0000-0000-000000000002"/>
+            <column name="menu_item_id" value="33333333-3333-3333-3333-333333333333"/>
+            <column name="ingredient_code" value="MILK"/>
+            <column name="amount" valueNumeric="120"/>
+            <column name="unit" value="MILLILITER"/>
+        </insert>
+        <insert tableName="menu_item_ingredients">
+            <column name="id" value="a3333333-0000-0000-0000-000000000003"/>
+            <column name="menu_item_id" value="33333333-3333-3333-3333-333333333333"/>
+            <column name="ingredient_code" value="CUP"/>
+            <column name="amount" valueNumeric="1"/>
+            <column name="unit" value="PIECE"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

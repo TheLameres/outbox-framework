@@ -68,11 +68,30 @@ class InboxEventDispatcherTest {
         }
     }
 
+    /** Слушатель, чьи handler'ы бросают исключения разных видов. */
+    @InboxEventListener(source = "Boom")
+    public static class FailingListener {
+        @InboxEventHandler(eventType = "Ping", order = 1)
+        public void permanent(Ping e) {
+            throw new IllegalArgumentException("bad input");
+        }
+    }
+
+    @InboxEventListener(source = "Flaky")
+    public static class TransientListener {
+        @InboxEventHandler(eventType = "Ping")
+        public void transientFailure(Ping e) {
+            throw new RuntimeException("db hiccup");
+        }
+    }
+
     @Configuration
     static class Cfg {
         @Bean AnySourceListener anySourceListener() { return new AnySourceListener(); }
         @Bean OrderListener orderListener() { return new OrderListener(); }
         @Bean IdempotenceListener idempotenceListener() { return new IdempotenceListener(); }
+        @Bean FailingListener failingListener() { return new FailingListener(); }
+        @Bean TransientListener transientListener() { return new TransientListener(); }
     }
 
     InboxEventDispatcher dispatcher;
@@ -160,5 +179,27 @@ class InboxEventDispatcherTest {
         var m = new InboxMessage(UUID.randomUUID(), "X", "1", "Unknown", "{}",
                 new LinkedHashMap<>(), Instant.now(), Instant.now(), 0, 1L);
         assertThat(dispatcher.dispatch(m, ctx(m))).isInstanceOf(ProcessingOutcome.Skipped.class);
+    }
+
+    // ---- Исключение handler'а должно классифицироваться по причине, а не по обёртке --
+
+    @Test
+    void permanentHandlerFailure_isFatal_notRetryable() {
+        var m = msg("Boom");
+
+        var outcome = dispatcher.dispatch(m, ctx(m));
+
+        // Method.invoke() оборачивает IllegalArgumentException в InvocationTargetException.
+        // Без раскрытия обёртки классификатор вернул бы Retryable.
+        assertThat(outcome).isInstanceOf(ProcessingOutcome.Fatal.class);
+    }
+
+    @Test
+    void transientHandlerFailure_isRetryable() {
+        var m = msg("Flaky");
+
+        var outcome = dispatcher.dispatch(m, ctx(m));
+
+        assertThat(outcome).isInstanceOf(ProcessingOutcome.Retryable.class);
     }
 }

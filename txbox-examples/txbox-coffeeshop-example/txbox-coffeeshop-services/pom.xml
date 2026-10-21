@@ -12,6 +12,76 @@
 
     <artifactId>txbox-coffeeshop-services</artifactId>
     <packaging>pom</packaging>
+    <name>TxBox :: Example :: Coffeeshop :: Services</name>
 
+    <modules>
+        <module>txbox-coffeeshop-order-service</module>
+        <module>txbox-coffeeshop-inventory-service</module>
+        <module>txbox-coffeeshop-barista-service</module>
+    </modules>
+
+    <!--
+        Общий стек всех трёх сервисов. Каждый сервис держит ОБЕ стороны паттерна:
+        outbox (producer-starter) и inbox (consumer-starter), но каждая транзакция —
+        локальная, в своей базе.
+
+        Доменные события лежат в txbox-coffeeshop-domain и попадают на classpath
+        каждого сервиса. Это обязательное условие: DomainEventScanner ищет
+        @DomainEvent по пакетам из конфигурации, а без класса в classpath
+        десериализация упадёт на неизвестном eventType.
+    -->
+    <dependencies>
+        <dependency>
+            <groupId>thelameres</groupId>
+            <artifactId>txbox-coffeeshop-domain</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>thelameres</groupId>
+            <artifactId>txbox-producer-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>thelameres</groupId>
+            <artifactId>txbox-consumer-starter</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-liquibase</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <!--
+            Единое имя артефакта: Dockerfile копирует target/app.jar без wildcard.
+            spring-boot-maven-plugin рядом кладёт app.jar.original — он не нужен,
+            но и не мешает, потому что имя целевого файла задано точно.
+        -->
+        <finalName>app</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

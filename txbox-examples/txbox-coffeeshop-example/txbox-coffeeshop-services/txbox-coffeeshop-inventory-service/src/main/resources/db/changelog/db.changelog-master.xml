@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd">
+
+    <!--
+        Общая схема паттерна: обе таблицы создаются в базе каждого сервиса.
+        Без outbox-таблицы producer-starter не сможет писать, без inbox-таблицы
+        consumer не сможет дедуплицировать.
+    -->
+    <include file="db/changelog/producer/v1-cumulative-changelog.xml"/>
+    <include file="db/changelog/consumer/v1-cumulative-changelog.xml"/>
+
+    <!-- Схема конкретного сервиса -->
+    <include file="db/changelog/inventory/v1-cumulative-changelog.xml"/>
+
+</databaseChangeLog>

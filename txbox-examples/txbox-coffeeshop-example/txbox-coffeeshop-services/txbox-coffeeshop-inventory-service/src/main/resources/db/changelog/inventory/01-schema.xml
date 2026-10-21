@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd">
+
+    <changeSet id="inventory-001-ingredients" author="coffeeshop">
+        <createTable tableName="ingredients">
+            <!-- Естественный ключ: код ингредиента приходит из событий и рецептов
+                 и только он может быть идентичностью в распределённой системе. -->
+            <column name="code" type="varchar(64)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="base_unit" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="inventory-002-stock-levels" author="coffeeshop">
+        <createTable tableName="stock_levels">
+            <column name="ingredient_code" type="varchar(64)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="unit" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="on_hand" type="numeric(14,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reserved" type="numeric(14,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamptz">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint
+                baseTableName="stock_levels" baseColumnNames="ingredient_code"
+                referencedTableName="ingredients" referencedColumnNames="code"
+                constraintName="fk_stock_ingredient"/>
+        <!-- Резерв не может превышать физический остаток -->
+        <sql>
+            ALTER TABLE stock_levels
+            ADD CONSTRAINT ck_stock_reserved_le_on_hand CHECK (reserved &lt;= on_hand);
+        </sql>
+    </changeSet>
+
+    <changeSet id="inventory-003-reservations" author="coffeeshop">
+        <createTable tableName="reservations">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="order_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ingredient_code" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="numeric(14,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="unit" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="timestamptz">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <!-- Естественный ключ: вторая линия защиты от повторного резервирования.
+             Первая — дедупликация inbox по messageId, но она не спасает
+             от перепубликации события с новым id. -->
+        <addUniqueConstraint tableName="reservations"
+                             columnNames="order_id, ingredient_code"
+                             constraintName="uk_reservation_order_ingredient"/>
+        <createIndex indexName="idx_reservations_order" tableName="reservations">
+            <column name="order_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="inventory-004-seed-stock" author="coffeeshop">
+        <insert tableName="ingredients">
+            <column name="code" value="BEANS_ARABICA"/>
+            <column name="name" value="Кофе арабика"/>
+            <column name="base_unit" value="GRAM"/>
+        </insert>
+        <insert tableName="ingredients">
+            <column name="code" value="MILK"/>
+            <column name="name" value="Молоко"/>
+            <column name="base_unit" value="MILLILITER"/>
+        </insert>
+        <insert tableName="ingredients">
+            <column name="code" value="WATER"/>
+            <column name="name" value="Вода"/>
+            <column name="base_unit" value="MILLILITER"/>
+        </insert>
+        <insert tableName="ingredients">
+            <column name="code" value="SUGAR"/>
+            <column name="name" value="Сахар"/>
+            <column name="base_unit" value="GRAM"/>
+        </insert>
+        <insert tableName="ingredients">
+            <column name="code" value="CUP"/>
+            <column name="name" value="Стакан"/>
+            <column name="base_unit" value="PIECE"/>
+        </insert>
+
+        <insert tableName="stock_levels">
+            <column name="ingredient_code" value="BEANS_ARABICA"/>
+            <column name="unit" value="GRAM"/>
+            <column name="on_hand" valueNumeric="5000"/>
+            <column name="reserved" valueNumeric="0"/>
+            <column name="updated_at" valueComputed="now()"/>
+        </insert>
+        <insert tableName="stock_levels">
+            <column name="ingredient_code" value="MILK"/>
+            <column name="unit" value="MILLILITER"/>
+            <column name="on_hand" valueNumeric="20000"/>
+            <column name="reserved" valueNumeric="0"/>
+            <column name="updated_at" valueComputed="now()"/>
+        </insert>
+        <insert tableName="stock_levels">
+            <column name="ingredient_code" value="WATER"/>
+            <column name="unit" value="MILLILITER"/>
+            <column name="on_hand" valueNumeric="50000"/>
+            <column name="reserved" valueNumeric="0"/>
+            <column name="updated_at" valueComputed="now()"/>
+        </insert>
+        <insert tableName="stock_levels">
+            <column name="ingredient_code" value="SUGAR"/>
+            <column name="unit" value="GRAM"/>
+            <column name="on_hand" valueNumeric="2000"/>
+            <column name="reserved" valueNumeric="0"/>
+            <column name="updated_at" valueComputed="now()"/>
+        </insert>
+        <insert tableName="stock_levels">
+            <column name="ingredient_code" value="CUP"/>
+            <column name="unit" value="PIECE"/>
+            <column name="on_hand" valueNumeric="500"/>
+            <column name="reserved" valueNumeric="0"/>
+            <column name="updated_at" valueComputed="now()"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

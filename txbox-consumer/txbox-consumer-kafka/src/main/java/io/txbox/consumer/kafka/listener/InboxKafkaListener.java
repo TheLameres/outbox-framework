@@ -158,9 +158,15 @@ public class InboxKafkaListener {
                 store.markSkipped(sk.messageId(), sk.reason());
                 ack.acknowledge();
             }
-            case ProcessingOutcome.Retryable r ->
-                // Без ack — Spring Kafka NACK и повторит
-                    log.warn("Event retryable: messageId={}, reason={}", r.messageId(), r.reason());
+            case ProcessingOutcome.Retryable r -> {
+                // Бросаем исключение, чтобы Spring Kafka запустил DefaultErrorHandler
+                // и перемотал позицию назад. Без исключения смещение зафиксируется
+                // следующим успешным сообщением, и Retryable окажется потерянным.
+                log.warn("Event retryable: messageId={}, reason={}", r.messageId(), r.reason());
+                throw new RuntimeException(
+                        "Inbox processing retryable: messageId=" + r.messageId()
+                                + ", reason=" + r.reason(), r.cause());
+            }
         }
     }
 }

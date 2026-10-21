@@ -194,18 +194,28 @@ public class InboxEventDispatcher implements InitializingBean {
                 }
 
                 invokeHandler(handler, message, context);
-                lastOutcome = new ProcessingOutcome.Success(message.messageId());
+                // Успех позднего handler'а не должен затирать раннюю временную ошибку:
+                // иначе сообщение подтвердится и потеряется, хотя один из handler'ов
+                // не отработал. Повторная доставка безопасна: транзакция откатится
+                // целиком, включая эффекты уже успешных handler'ов.
+                if (!(lastOutcome instanceof ProcessingOutcome.Retryable)) {
+                    lastOutcome = new ProcessingOutcome.Success(message.messageId());
+                }
 
             } catch (Exception e) {
-                lastOutcome = ProcessingOutcomeClassifier.classify(message.messageId(), e);
+                // Method.invoke() оборачивает исключение handler'а в InvocationTargetException.
+                // Классифицировать нужно настоящую причину: иначе IllegalArgumentException
+                // превращается в Retryable, а Fatal становится недостижимым.
+                Throwable cause = unwrap(e);
+                lastOutcome = ProcessingOutcomeClassifier.classify(message.messageId(), cause);
 
                 if (lastOutcome instanceof ProcessingOutcome.Fatal) {
-                    log.error("Handler fatal error: {}", lastOutcome, e);
+                    log.error("Handler fatal error: {}", lastOutcome, cause);
                     break;
                 }
 
                 log.warn("Handler retryable error: messageId={}, handler={}",
-                        message.messageId(), handler.method.getName(), e);
+                        message.messageId(), handler.method.getName(), cause);
             }
         }
 
@@ -274,6 +284,18 @@ public class InboxEventDispatcher implements InitializingBean {
                             + "', targetType=" + targetType.getName()
                             + ", messageId=" + message.messageId(), e);
         }
+    }
+
+    /**
+     * Снимает обёртки рефлексии: {@code InvocationTargetException} несёт реальное
+     * исключение handler'а в {@code getCause()}.
+     */
+    private static Throwable unwrap(Throwable e) {
+        Throwable current = e;
+        while (current instanceof InvocationTargetException ite && ite.getCause() != null) {
+            current = ite.getCause();
+        }
+        return current;
     }
 
     private List<HandlerMethod> findHandlers(String source, String eventType) {
